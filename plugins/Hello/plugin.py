@@ -1,8 +1,8 @@
 from plugins.BasePlugin import BasePlugin
 
 class HelloPlugin(BasePlugin):
-	def __init__(self, twitchy):
-		super(HelloPlugin, self).__init__(twitchy)
+	def __init__(self, twitchBot):
+		super(HelloPlugin, self).__init__(twitchBot)
 		
 		self.registerCommand('hello', self.helloHandler) # respond when '!hello' is at beginning of message
 		self.registerTrigger('hey', self.heyHandler) # respond when 'hi' is anywhere in message
