@@ -36,14 +36,17 @@ class TwitchBot:
         for p in self._plugins:
             p._kill()
 
-    def sendMessage(self, message):
-        self.ircSock.send(str('PRIVMSG %s :%s\n' % (self.ircChan, message)).encode('UTF-8'))
+    def sendMessage(self, chan, message):
+        self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
 
     def connect(self, port):
         self.ircSock.connect((self.ircServ, port))
         self.ircSock.send(str("Pass " + Settings.irc_oauth + "\r\n").encode('UTF-8'))
         self.ircSock.send(str("NICK " + Settings.irc_username + "\r\n").encode('UTF-8'))
-        self.ircSock.send(str("JOIN " + self.ircChan + "\r\n").encode('UTF-8'))
+
+        for channel in self.queryHelper.getAllChannels():
+            self.ircSock.send(str("JOIN " + channel.channel.lower() + "\r\n").encode('UTF-8'))
+            time.sleep(.5)
 
     def registerCommand(self, command, pluginFunction):
         self.commands.append( {'regex': command, 'handler':pluginFunction} )
@@ -59,6 +62,7 @@ class TwitchBot:
 
     def handleIRCMessage(self, ircMessage):
         print(ircMessage)
+
         nick = ircMessage.split('!')[0][1:]
 
         if ircMessage.find(' PRIVMSG #') != -1:
@@ -66,7 +70,7 @@ class TwitchBot:
                 return
 
             chan = ircMessage.split(' ')[2]
-            msg = ircMessage.split(' PRIVMSG '+ self.ircChan +' :')[1]
+            msg = ircMessage.split(' PRIVMSG '+ chan +' :')[1]
 
             if re.search('^!ignore', msg, re.IGNORECASE):
                 args = msg.split(" ")
@@ -77,17 +81,17 @@ class TwitchBot:
                 if re.search('^!' + pluginDict['regex'], msg, re.IGNORECASE):
                     handler = pluginDict['handler']
                     args = msg.split(" ")
-                    handler(nick, args)
+                    handler(nick, chan, args)
 
             for pluginDict in self.triggers:
                 if re.search('^' + pluginDict['regex'], msg, re.IGNORECASE):
                     handler = pluginDict['handler']
-                    handler(nick, msg)
+                    handler(nick, chan, msg)
 
             for spam in self.spamMessages:
                 if re.search(spam, msg, re.IGNORECASE):
                     time.sleep(1)
-                    self.sendMessage(".timeout " + nick + "\n")
+                    self.sendMessage(chan, ".timeout " + nick + "\n")
                     print("Timed out " + nick + " for spam: " + spam + ". Message was: " + msg)
 
         elif ircMessage.find('PING ') != -1:
@@ -95,32 +99,39 @@ class TwitchBot:
 
         elif ircMessage.find('JOIN ') != -1:
             nick = ircMessage.split('!')[0][1:]
-            print(nick + " joined chat")
+            chan = ircMessage.split(' ')[2]
+
+            print(nick + " joined " + chan)
             for handler in self.joinPartHandlers:
-                handler(nick, True)
+                handler(nick, chan, True)
 
         elif ircMessage.find('PART ') != -1:
             nick = ircMessage.split('!')[0][1:]
-            print(nick + " left chat")
+            chan = ircMessage.split(' ')[2]
+
+            print(nick + " left " + chan)
             for handler in self.joinPartHandlers:
-                handler(nick, False)
+                handler(nick, chan, False)
 
         elif ircMessage.find('MODE '+ self.ircChan +' +o') != -1:
             nick = ircMessage.split(' ')[-1]
+            chan = ircMessage.split(' ')[2]
+
             if nick.lower() != Settings.irc_username.lower():
-                print("Mod joined: " + nick)
+                print("Mod joined " + chan + ": " + nick)
                 for handler in self.modHandlers:
-                    handler(nick, True)
+                    handler(nick, chan, True)
 
         elif ircMessage.find('MODE ' + self.ircChan + ' -o') != -1:
             nick = ircMessage.split(' ')[-1]
-            if nick.lower() != Settings.irc_username.lower():
-                print("Mod left: "+nick)
-                for handler in self.modHandlers:
-                    handler(nick, False)
+            chan = ircMessage.split(' ')[2]
 
+            if nick.lower() != Settings.irc_username.lower():
+                print("Mod left " + chan + ": " + nick)
+                for handler in self.modHandlers:
+                    handler(nick, chan, False)
         else:
-            print(ircMessage)
+            pass
 
     def run(self):
         line_sep_exp = re.compile(b'\r?\n')

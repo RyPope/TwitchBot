@@ -8,5 +8,7 @@ class TestPlugin(BasePlugin):
 
         self.registerCommand('channels', self.channelHandler)
 
-    def channelHandler(self, nick, commandArg):
-        print(self.queryHelper.getAllChannels())
+    def channelHandler(self, nick, chan, commandArg):
+        channels = self.queryHelper.getAllChannels()
+        for channel in channels:
+            self.sendMessage(chan, "Channel: %s" % channel.channel)

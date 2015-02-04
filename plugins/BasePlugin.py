@@ -17,5 +17,5 @@ class BasePlugin(object):
     def registerForModNotifications(self, handler):
         self.twitchy.registerForModNotifications(handler)
 
-    def sendMessage(self, message):
-        self.twitchy.sendMessage(message)
+    def sendMessage(self, chan, message):
+        self.twitchy.sendMessage(chan, message)

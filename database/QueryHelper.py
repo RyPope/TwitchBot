@@ -25,3 +25,21 @@ class QueryHelper():
         finally:
             db.close()
             return channels
+
+
+    def checkPluginEnabled(self, channel, plugin):
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("SELECT enabled FROM plugins WHERE name = %s")
+                rows = cur.fetchall()
+
+                for row in rows:
+                    channels.append(Channel(row))
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return channels
