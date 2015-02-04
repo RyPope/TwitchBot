@@ -9,6 +9,14 @@ class TestPlugin(BasePlugin):
 
         self.registerCommand(self.className, 'channels', self.channelHandler)
         self.registerCommand(self.className, 'enabled', self.enabledPlugin)
+        # self.registerAll(self.className, self.msgHandler)
+        # self.registerForJoinPartNotifications(self.className, self.joinPart)
+
+    def msgHandler(self, nick, chan, msg):
+        print(msg)
+
+    def joinPart(self, nick, chan, isJoining):
+        self.sendMessage(self.className, chan, nick + " has joined");
 
     def channelHandler(self, nick, chan, commandArg):
         channels = self.queryHelper.getAllChannels()

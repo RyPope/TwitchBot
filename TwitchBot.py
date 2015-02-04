@@ -23,13 +23,10 @@ class TwitchBot:
         self._mainModule = 'plugin'
         self._plugins = []
         self.commands = []
-        self.triggers = []
+        self.msgRegister = []
         self.joinPartHandlers = []
         self.modHandlers = []
-        self.ignoredUsers = []
         self.loadedPluginNames = []
-        self.spamMessages = []
-
         self.queryHelper = QueryHelper()
 
     def kill(self):
@@ -51,8 +48,8 @@ class TwitchBot:
     def registerCommand(self, className, command, pluginFunction):
         self.commands.append( {'regex': command, 'handler':pluginFunction, 'plugin':className} )
 
-    def registerTrigger(self, className, trigger, pluginFunction):
-        self.triggers.append( {'regex': trigger, 'handler':pluginFunction, 'plugin':className} )
+    def registerAll(self, className, pluginFunction):
+        self.msgRegister.append( {'handler':pluginFunction, 'plugin':className} )
 
     def registerForJoinPartNotifications(self, className, pluginFunction):
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
@@ -61,7 +58,7 @@ class TwitchBot:
         self.modHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
-        print(ircMessage)
+        # print(ircMessage)
 
         nick = ircMessage.split('!')[0][1:]
 
@@ -72,27 +69,17 @@ class TwitchBot:
             chan = ircMessage.split(' ')[2]
             msg = ircMessage.split(' PRIVMSG '+ chan +' :')[1]
 
-            if re.search('^!ignore', msg, re.IGNORECASE):
-                args = msg.split(" ")
-                self.ignoredUsers.append(args[1])
-                return
-
             for pluginDict in self.commands:
-                if re.search('^!' + pluginDict['regex'], msg, re.IGNORECASE):
+                if re.search('^' + Settings.irc_trigger + pluginDict['regex'], msg, re.IGNORECASE) \
+                        and self.queryHelper.checkPluginEnabled(chan, pluginDict['plugin']):
                     handler = pluginDict['handler']
                     args = msg.split(" ")
                     handler(nick, chan, args)
 
-            for pluginDict in self.triggers:
-                if re.search('^' + pluginDict['regex'], msg, re.IGNORECASE):
+            for pluginDict in self.msgRegister:
+                if self.queryHelper.checkPluginEnabled(chan, pluginDict['plugin']):
                     handler = pluginDict['handler']
                     handler(nick, chan, msg)
-
-            for spam in self.spamMessages:
-                if re.search(spam, msg, re.IGNORECASE):
-                    time.sleep(1)
-                    self.sendMessage(chan, ".timeout " + nick + "\n")
-                    print("Timed out " + nick + " for spam: " + spam + ". Message was: " + msg)
 
         elif ircMessage.find('PING ') != -1:
             self.ircSock.send(str("PING :pong\n").encode('UTF-8'))
@@ -103,7 +90,8 @@ class TwitchBot:
 
             print(nick + " joined " + chan)
             for handler in self.joinPartHandlers:
-                handler(nick, chan, True)
+                if self.queryHelper.checkPluginEnabled(chan, handler['plugin']):
+                    handler['handler'](nick, chan, True)
 
         elif ircMessage.find('PART ') != -1:
             nick = ircMessage.split('!')[0][1:]
@@ -111,7 +99,8 @@ class TwitchBot:
 
             print(nick + " left " + chan)
             for handler in self.joinPartHandlers:
-                handler.handler(nick, chan, False)
+                if self.queryHelper.checkPluginEnabled(chan, handler['plugin']):
+                    handler['handler'](nick, chan, False)
 
         elif ircMessage.find('MODE '+ self.ircChan +' +o') != -1:
             nick = ircMessage.split(' ')[-1]
@@ -120,7 +109,8 @@ class TwitchBot:
             if nick.lower() != Settings.irc_username.lower():
                 print("Mod joined " + chan + ": " + nick)
                 for handler in self.modHandlers:
-                    handler.handler(nick, chan, True)
+                    if self.queryHelper.checkPluginEnabled(chan, handler['plugin']):
+                        handler['handler'](nick, chan, True)
 
         elif ircMessage.find('MODE ' + self.ircChan + ' -o') != -1:
             nick = ircMessage.split(' ')[-1]
@@ -129,7 +119,8 @@ class TwitchBot:
             if nick.lower() != Settings.irc_username.lower():
                 print("Mod left " + chan + ": " + nick)
                 for handler in self.modHandlers:
-                    handler.handler(nick, chan, False)
+                    if self.queryHelper.checkPluginEnabled(chan, handler['plugin']):
+                        handler['handler'](nick, chan, False)
         else:
             pass
 

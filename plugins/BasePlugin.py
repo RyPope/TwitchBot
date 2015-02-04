@@ -8,8 +8,8 @@ class BasePlugin(object):
     def registerCommand(self, className, command, handler):
         self.twitchy.registerCommand(className, command, handler)
 
-    def registerTrigger(self, className,  trigger, handler):
-        self.twitchy.registerTrigger(className, trigger, handler)
+    def registerAll(self, className, handler):
+        self.twitchy.registerAll(className, handler)
 
     def registerForJoinPartNotifications(self, className, handler):
         self.twitchy.registerForJoinPartNotifications(className, handler)

@@ -28,17 +28,71 @@ class QueryHelper():
 
 
     def checkPluginEnabled(self, channel, plugin):
-        enabled = False
+        enabled = True
         try:
             db = self.sqlHelper.getConnection()
 
             with closing(db.cursor()) as cur:
                 cur.execute("""SELECT enabled FROM plugins WHERE name = %s AND channel = %s""", (plugin, channel))
 
-                enabled = int(cur.fetchone()[0]) == 1
+                result = cur.fetchone()
+                if not result == None:
+                    enabled = int(result[0]) == 1
 
         except Exception as e:
             print(traceback.format_exc())
         finally:
             db.close()
-            return enabled == True
+            return enabled
+
+    def getSpamMessages(self):
+        spamMessages = []
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("""SELECT message FROM spam_messages""")
+                rows = cur.fetchall()
+
+                for message in rows:
+                    spamMessages.append(str(message))
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return spamMessages
+
+    def isAdmin(self, username):
+        admin = False
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("""SELECT username FROM admins WHERE username = %s""", (username,))
+
+                result = cur.fetchone()
+                if not result == None:
+                    admin = True
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return admin
+
+    # def addChannel(self, channel, mod):
+    #     try:
+    #         db = self.sqlHelper.getConnection()
+    #
+    #         with closing(db.cursor()) as cur:
+    #             cur.execute("""INSERT username FROM admins WHERE username = %s""", (username,))
+    #
+    #             result = cur.fetchone()
+    #             if not result == None:
+    #                 admin = True
+    #
+    #     except Exception as e:
+    #         print(traceback.format_exc())
+    #     finally:
+    #         db.close()
