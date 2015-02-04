@@ -36,7 +36,7 @@ class TwitchBot:
         for p in self._plugins:
             p._kill()
 
-    def sendMessage(self, chan, message):
+    def sendMessage(self, className, chan, message):
         self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
 
     def connect(self, port):
@@ -48,17 +48,17 @@ class TwitchBot:
             self.ircSock.send(str("JOIN " + channel.channel.lower() + "\r\n").encode('UTF-8'))
             time.sleep(.5)
 
-    def registerCommand(self, command, pluginFunction):
-        self.commands.append( {'regex': command, 'handler':pluginFunction} )
+    def registerCommand(self, className, command, pluginFunction):
+        self.commands.append( {'regex': command, 'handler':pluginFunction, 'plugin':className} )
 
-    def registerTrigger(self, trigger, pluginFunction):
-        self.triggers.append( {'regex': trigger, 'handler':pluginFunction} )
+    def registerTrigger(self, className, trigger, pluginFunction):
+        self.triggers.append( {'regex': trigger, 'handler':pluginFunction, 'plugin':className} )
 
-    def registerForJoinPartNotifications(self, pluginFunction):
-        self.joinPartHandlers.append( pluginFunction )
+    def registerForJoinPartNotifications(self, className, pluginFunction):
+        self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
-    def registerForModNotifications(self, pluginFunction):
-        self.modHandlers.append( pluginFunction )
+    def registerForModNotifications(self, className, pluginFunction):
+        self.modHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
         print(ircMessage)
@@ -111,7 +111,7 @@ class TwitchBot:
 
             print(nick + " left " + chan)
             for handler in self.joinPartHandlers:
-                handler(nick, chan, False)
+                handler.handler(nick, chan, False)
 
         elif ircMessage.find('MODE '+ self.ircChan +' +o') != -1:
             nick = ircMessage.split(' ')[-1]
@@ -120,7 +120,7 @@ class TwitchBot:
             if nick.lower() != Settings.irc_username.lower():
                 print("Mod joined " + chan + ": " + nick)
                 for handler in self.modHandlers:
-                    handler(nick, chan, True)
+                    handler.handler(nick, chan, True)
 
         elif ircMessage.find('MODE ' + self.ircChan + ' -o') != -1:
             nick = ircMessage.split(' ')[-1]
@@ -129,7 +129,7 @@ class TwitchBot:
             if nick.lower() != Settings.irc_username.lower():
                 print("Mod left " + chan + ": " + nick)
                 for handler in self.modHandlers:
-                    handler(nick, chan, False)
+                    handler.handler(nick, chan, False)
         else:
             pass
 

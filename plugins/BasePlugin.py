@@ -5,17 +5,17 @@ class BasePlugin(object):
     def _kill(self):
         self.twitchy = None
 
-    def registerCommand(self, command, handler):
-        self.twitchy.registerCommand(command, handler)
+    def registerCommand(self, className, command, handler):
+        self.twitchy.registerCommand(className, command, handler)
 
-    def registerTrigger(self, trigger, handler):
-        self.twitchy.registerTrigger(trigger, handler)
+    def registerTrigger(self, className,  trigger, handler):
+        self.twitchy.registerTrigger(className, trigger, handler)
 
-    def registerForJoinPartNotifications(self, handler):
-        self.twitchy.registerForJoinPartNotifications(handler)
+    def registerForJoinPartNotifications(self, className, handler):
+        self.twitchy.registerForJoinPartNotifications(className, handler)
 
-    def registerForModNotifications(self, handler):
-        self.twitchy.registerForModNotifications(handler)
+    def registerForModNotifications(self, className, handler):
+        self.twitchy.registerForModNotifications(className, handler)
 
-    def sendMessage(self, chan, message):
-        self.twitchy.sendMessage(chan, message)
+    def sendMessage(self, className, chan, message):
+        self.twitchy.sendMessage(className, chan, message)

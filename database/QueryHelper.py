@@ -28,18 +28,17 @@ class QueryHelper():
 
 
     def checkPluginEnabled(self, channel, plugin):
+        enabled = False
         try:
             db = self.sqlHelper.getConnection()
 
             with closing(db.cursor()) as cur:
-                cur.execute("SELECT enabled FROM plugins WHERE name = %s")
-                rows = cur.fetchall()
+                cur.execute("""SELECT enabled FROM plugins WHERE name = %s AND channel = %s""", (plugin, channel))
 
-                for row in rows:
-                    channels.append(Channel(row))
+                enabled = int(cur.fetchone()[0]) == 1
 
         except Exception as e:
             print(traceback.format_exc())
         finally:
             db.close()
-            return channels
+            return enabled == True
