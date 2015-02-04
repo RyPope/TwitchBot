@@ -14,8 +14,8 @@ from util.BaseSettings import Settings
 class TwitchBot:
     def __init__(self):
         self.ircSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.ircServ = Settings.IRCHost
-        self.ircChan = '#' + Settings.DefaultChannel.lower()
+        self.ircServ = Settings.irc_host
+        self.ircChan = '#' + Settings.irc_channel.lower()
 
         self.connected = False
         self._pluginFolder = './plugins/'
@@ -38,8 +38,8 @@ class TwitchBot:
 
     def connect(self, port):
         self.ircSock.connect((self.ircServ, port))
-        self.ircSock.send(str("Pass " + Settings.Oauth + "\r\n").encode('UTF-8'))
-        self.ircSock.send(str("NICK " + Settings.Username + "\r\n").encode('UTF-8'))
+        self.ircSock.send(str("Pass " + Settings.irc_oauth + "\r\n").encode('UTF-8'))
+        self.ircSock.send(str("NICK " + Settings.irc_username + "\r\n").encode('UTF-8'))
         self.ircSock.send(str("JOIN " + self.ircChan + "\r\n").encode('UTF-8'))
 
     def registerCommand(self, command, pluginFunction):
@@ -55,21 +55,23 @@ class TwitchBot:
         self.modHandlers.append( pluginFunction )
 
     def handleIRCMessage(self, ircMessage):
-        if ircMessage.find(' PRIVMSG '+ self.ircChan +' :') != -1:
-            nick = ircMessage.split('!')[0][1:]
+        print("Message: %s" % ircMessage)
+        nick = ircMessage.split('!')[0][1:]
+
+        if ircMessage.find(' PRIVMSG #') != -1:
             if nick.lower() in self.ignoredUsers:
                 return
-            tokens = ircMessage.split(' PRIVMSG '+ self.ircChan +' :')
-            msg = tokens[1] # Parse msg
-            chan = tokens[0].split(' ')[1] # Parse channel
 
-            if re.search('^%signore' % Settings.Trigger, msg, re.IGNORECASE):
+            chan = ircMessage.split(' ')[2]
+            msg = ircMessage.split(' PRIVMSG '+ self.ircChan +' :')[1]
+
+            if re.search('^!ignore', msg, re.IGNORECASE):
                 args = msg.split(" ")
                 self.ignoredUsers.append(args[1])
                 return
 
             for pluginDict in self.commands:
-                if re.search('^%s' + pluginDict['regex'] % Settings.Trigger, msg, re.IGNORECASE):
+                if re.search('^!' + pluginDict['regex'], msg, re.IGNORECASE):
                     handler = pluginDict['handler']
                     args = msg.split(" ")
                     handler(nick, args)
@@ -102,14 +104,14 @@ class TwitchBot:
 
         elif ircMessage.find('MODE '+ self.ircChan +' +o') != -1:
             nick = ircMessage.split(' ')[-1]
-            if nick.lower() != Settings.Username.lower():
+            if nick.lower() != Settings.irc_username.lower():
                 print("Mod joined: "+nick)
                 for handler in self.modHandlers:
                     handler(nick, True)
 
         elif ircMessage.find('MODE '+ self.ircChan +' -o') != -1:
             nick = ircMessage.split(' ')[-1]
-            if nick.lower() != Settings.Username.lower():
+            if nick.lower() != Settings.irc_username.lower():
                 print("Mod left: "+nick)
                 for handler in self.modHandlers:
                     handler(nick, False)
@@ -137,8 +139,8 @@ class TwitchBot:
 
     def loadPlugins(self):
         potentialPlugins = []
-        allplugins = os.listdir(self._pluginFolder)
-        for i in allplugins:
+        allPlugins = os.listdir(self._pluginFolder)
+        for i in allPlugins:
             location = os.path.join(self._pluginFolder, i)
             if not os.path.isdir(location) or not self._mainModule + ".py" in os.listdir(location):
                 continue
