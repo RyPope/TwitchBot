@@ -10,6 +10,7 @@ import inspect
 from threading import Thread
 from plugins.BasePlugin import BasePlugin
 from util.BaseSettings import Settings
+from database.QueryHelper import QueryHelper
 
 class TwitchBot:
     def __init__(self):
@@ -27,7 +28,9 @@ class TwitchBot:
         self.modHandlers = []
         self.ignoredUsers = []
         self.loadedPluginNames = []
-        self.spamMessages = ['codes4free.net', 'g2a.com/r/', 'prizescode.net']
+        self.spamMessages = []
+
+        self.queryHelper = QueryHelper()
 
     def kill(self):
         for p in self._plugins:
@@ -55,7 +58,7 @@ class TwitchBot:
         self.modHandlers.append( pluginFunction )
 
     def handleIRCMessage(self, ircMessage):
-        print("Message: %s" % ircMessage)
+        print(ircMessage)
         nick = ircMessage.split('!')[0][1:]
 
         if ircMessage.find(' PRIVMSG #') != -1:
@@ -92,24 +95,24 @@ class TwitchBot:
 
         elif ircMessage.find('JOIN ') != -1:
             nick = ircMessage.split('!')[0][1:]
-            print(nick +" joined chat")
+            print(nick + " joined chat")
             for handler in self.joinPartHandlers:
                 handler(nick, True)
 
         elif ircMessage.find('PART ') != -1:
             nick = ircMessage.split('!')[0][1:]
-            print(nick +" left chat")
+            print(nick + " left chat")
             for handler in self.joinPartHandlers:
                 handler(nick, False)
 
         elif ircMessage.find('MODE '+ self.ircChan +' +o') != -1:
             nick = ircMessage.split(' ')[-1]
             if nick.lower() != Settings.irc_username.lower():
-                print("Mod joined: "+nick)
+                print("Mod joined: " + nick)
                 for handler in self.modHandlers:
                     handler(nick, True)
 
-        elif ircMessage.find('MODE '+ self.ircChan +' -o') != -1:
+        elif ircMessage.find('MODE ' + self.ircChan + ' -o') != -1:
             nick = ircMessage.split(' ')[-1]
             if nick.lower() != Settings.irc_username.lower():
                 print("Mod left: "+nick)
