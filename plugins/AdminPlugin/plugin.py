@@ -13,5 +13,5 @@ class AdminPlugin(BasePlugin):
         if not len(args) == 3:
             self.sendMessage(self.className, chan, "Invalid Syntax, use <channel> <mod>")
 
-        if self.queryHelper.isAdmin(nick):
+        # if self.queryHelper.isAdmin(nick):
             # self.queryHelper.addChannel(args[1], args[2])

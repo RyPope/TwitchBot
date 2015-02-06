@@ -24,5 +24,5 @@ class TestPlugin(BasePlugin):
             self.sendMessage(self.className, chan, "Channel: %s" % channel.channel)
 
     def enabledPlugin(self, nick, chan, commandArg):
-        enabled = self.queryHelper.checkPluginEnabled(chan, commandArg[1])
+        enabled = self.queryHelper.checkPluginDisabled(chan, commandArg[1])
         self.sendMessage(self.className, chan, "Plugin %s enabled: %s" % (commandArg[1], str(enabled)) )

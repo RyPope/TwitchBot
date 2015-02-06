@@ -15,8 +15,8 @@ from database.QueryHelper import QueryHelper
 class TwitchBot:
     def __init__(self):
         self.ircSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.ircServ = Settings.irc_host
-        self.ircChan = '#' + Settings.irc_channel.lower()
+        self.irc_host = Settings.irc_host
+        self.irc_chan = '#' + Settings.irc_channel.lower()
 
         self.connected = False
         self._pluginFolder = './plugins/'
@@ -37,7 +37,7 @@ class TwitchBot:
         self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
 
     def connect(self, port):
-        self.ircSock.connect((self.ircServ, port))
+        self.ircSock.connect((self.irc_host, port))
         self.ircSock.send(str("Pass " + Settings.irc_oauth + "\r\n").encode('UTF-8'))
         self.ircSock.send(str("NICK " + Settings.irc_username + "\r\n").encode('UTF-8'))
 
@@ -63,21 +63,19 @@ class TwitchBot:
         nick = ircMessage.split('!')[0][1:]
 
         if ircMessage.find(' PRIVMSG #') != -1:
-            if nick.lower() in self.ignoredUsers:
-                return
 
             chan = ircMessage.split(' ')[2]
             msg = ircMessage.split(' PRIVMSG '+ chan +' :')[1]
 
             for pluginDict in self.commands:
                 if re.search('^' + Settings.irc_trigger + pluginDict['regex'], msg, re.IGNORECASE) \
-                        and self.queryHelper.checkPluginEnabled(chan, pluginDict['plugin']):
+                        and self.queryHelper.checkPluginDisabled(chan, pluginDict['plugin']):
                     handler = pluginDict['handler']
                     args = msg.split(" ")
                     handler(nick, chan, args)
 
             for pluginDict in self.msgRegister:
-                if self.queryHelper.checkPluginEnabled(chan, pluginDict['plugin']):
+                if not self.queryHelper.checkPluginDisabled(chan, pluginDict['plugin']):
                     handler = pluginDict['handler']
                     handler(nick, chan, msg)
 
@@ -90,7 +88,7 @@ class TwitchBot:
 
             print(nick + " joined " + chan)
             for handler in self.joinPartHandlers:
-                if self.queryHelper.checkPluginEnabled(chan, handler['plugin']):
+                if self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                     handler['handler'](nick, chan, True)
 
         elif ircMessage.find('PART ') != -1:
@@ -99,27 +97,27 @@ class TwitchBot:
 
             print(nick + " left " + chan)
             for handler in self.joinPartHandlers:
-                if self.queryHelper.checkPluginEnabled(chan, handler['plugin']):
+                if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                     handler['handler'](nick, chan, False)
 
-        elif ircMessage.find('MODE '+ self.ircChan +' +o') != -1:
+        elif ircMessage.find('MODE '+ self.irc_chan +' +o') != -1:
             nick = ircMessage.split(' ')[-1]
             chan = ircMessage.split(' ')[2]
 
             if nick.lower() != Settings.irc_username.lower():
                 print("Mod joined " + chan + ": " + nick)
                 for handler in self.modHandlers:
-                    if self.queryHelper.checkPluginEnabled(chan, handler['plugin']):
+                    if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                         handler['handler'](nick, chan, True)
 
-        elif ircMessage.find('MODE ' + self.ircChan + ' -o') != -1:
+        elif ircMessage.find('MODE ' + self.irc_chan + ' -o') != -1:
             nick = ircMessage.split(' ')[-1]
             chan = ircMessage.split(' ')[2]
 
             if nick.lower() != Settings.irc_username.lower():
                 print("Mod left " + chan + ": " + nick)
                 for handler in self.modHandlers:
-                    if self.queryHelper.checkPluginEnabled(chan, handler['plugin']):
+                    if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                         handler['handler'](nick, chan, False)
         else:
             pass

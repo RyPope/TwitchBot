@@ -27,49 +27,31 @@ class QueryHelper():
             return channels
 
 
-    def checkPluginEnabled(self, channel, plugin):
-        enabled = True
+    def checkPluginDisabled(self, channel, plugin):
+        disabled = False
         try:
             db = self.sqlHelper.getConnection()
 
             with closing(db.cursor()) as cur:
-                cur.execute("""SELECT enabled FROM plugins WHERE name = %s AND channel = %s""", (plugin, channel))
+                cur.execute("""SELECT plugin FROM disabled_plugins WHERE plugin = %s AND channel = %s""", (plugin, channel))
 
                 result = cur.fetchone()
                 if not result == None:
-                    enabled = int(result[0]) == 1
+                    disabled = True
 
         except Exception as e:
             print(traceback.format_exc())
         finally:
             db.close()
-            return enabled
+            return disabled
 
-    def getSpamMessages(self):
-        spamMessages = []
-        try:
-            db = self.sqlHelper.getConnection()
-
-            with closing(db.cursor()) as cur:
-                cur.execute("""SELECT message FROM spam_messages""")
-                rows = cur.fetchall()
-
-                for message in rows:
-                    spamMessages.append(str(message))
-
-        except Exception as e:
-            print(traceback.format_exc())
-        finally:
-            db.close()
-            return spamMessages
-
-    def isAdmin(self, username):
+    def isAdmin(self, user):
         admin = False
         try:
             db = self.sqlHelper.getConnection()
 
             with closing(db.cursor()) as cur:
-                cur.execute("""SELECT username FROM admins WHERE username = %s""", (username,))
+                cur.execute("""SELECT user FROM admins WHERE username = %s""", (user,))
 
                 result = cur.fetchone()
                 if not result == None:
@@ -80,19 +62,3 @@ class QueryHelper():
         finally:
             db.close()
             return admin
-
-    # def addChannel(self, channel, mod):
-    #     try:
-    #         db = self.sqlHelper.getConnection()
-    #
-    #         with closing(db.cursor()) as cur:
-    #             cur.execute("""INSERT username FROM admins WHERE username = %s""", (username,))
-    #
-    #             result = cur.fetchone()
-    #             if not result == None:
-    #                 admin = True
-    #
-    #     except Exception as e:
-    #         print(traceback.format_exc())
-    #     finally:
-    #         db.close()

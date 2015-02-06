@@ -8,13 +8,43 @@ from warnings import filterwarnings, resetwarnings
 class SQLHelper:
     def __init__(self):
         filterwarnings('ignore', category = MySQLdb.Warning) # SQL warns on DB creation for whatever reason.
+        self.dropDB()
         self.initDB()
         self.initTables()
+        self.insertStubData()
         resetwarnings()
+
+    def insertStubData(self):
+        try:
+            db = MySQLdb.connect(host=Settings.db_host, user=Settings.db_user, passwd=Settings.db_password, db=Settings.db_name)
+            with closing(db.cursor()) as cur:
+                cur.execute("""INSERT INTO channels (channel) VALUES(%s)""", "#PopeTheThird")
+
+                db.commit()
+
+        except Exception as e:
+            print("Error inserting stub data")
+            print(traceback.format_exc())
+        finally:
+            db.close()
 
     def getConnection(self):
         db = MySQLdb.connect(host=Settings.db_host, user=Settings.db_user, passwd=Settings.db_password, db=Settings.db_name)
         return db
+
+    def dropDB(self):
+        try:
+            db = MySQLdb.connect(host=Settings.db_host, user=Settings.db_user, passwd=Settings.db_password)
+            with closing(db.cursor()) as cur:
+                cur.execute("DROP DATABASE %s" % Settings.db_name)
+
+                db.commit()
+
+        except Exception as e:
+            print("Error dropping DB")
+            print(traceback.format_exc())
+        finally:
+            db.close()
 
     def initDB(self):
         try:
@@ -35,40 +65,30 @@ class SQLHelper:
             db = self.getConnection()
             with closing(db.cursor()) as cur:
                 cur.execute("CREATE TABLE IF NOT EXISTS `channels` "
-                            "(`channel` text NOT NULL,"
-                            "`enabled` tinyint(1) NOT NULL,"
-                            "`admin` text NOT NULL,"
-                            "`sub_start` datetime NOT NULL,"
-                            "`sub_end` datetime NOT NULL)")
+                            "(`channel_id` int NOT NULL,"
+                            "`channel` varchar(128) NOT NULL,"
+                            "`enabled` tinyint(1) DEFAULT 1,"
+                            "PRIMARY KEY (`channel_id`))")
 
-                cur.execute("CREATE TABLE IF NOT EXISTS `ignored_users` "
-                            "(`channel` text NOT NULL,"
-                            "`admin` text NOT NULL,"
-                            "`user` text NOT NULL,"
-                            "`created_on` datetime NOT NULL,"
-                            "`expires_on` datetime NOT NULL)")
+                cur.execute("CREATE TABLE IF NOT EXISTS `users` "
+                            "(`user_id` int NOT NULL,"
+                            "`username` varchar(128) NOT NULL,"
+                            "`is_admin` tinyint(1) DEFAULT 0,"
+                            "PRIMARY KEY (`user_id`))")
 
-                cur.execute("CREATE TABLE IF NOT EXISTS `plugins` "
-                            "(`name` text NOT NULL,"
-                            "`channel` text NOT NULL,"
-                            "`enabled` tinyint(1) NOT NULL,"
-                            "`location` text NOT NULL)")
+                cur.execute("CREATE TABLE IF NOT EXISTS `disabled_plugins` "
+                            "(`plugin` varchar(128) NOT NULL,"
+                            "`channel` varchar(128) NOT NULL)")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `settings` "
-                            "(`channel` text NOT NULL,"
-                            "`key` text NOT NULL,"
-                            "`value` text NOT NULL)")
-
-                cur.execute("CREATE TABLE IF NOT EXISTS `spam_triggers` "
-                            "(`channel` text NOT NULL,"
-                            "`value` text NOT NULL,"
-                            "`created_on` datetime NOT NULL,"
-                            "`expires_on` datetime NOT NULL)")
+                            "(`channel` varchar(128) NOT NULL,"
+                            "`key` varchar(128) NOT NULL,"
+                            "`value` varchar(1024) NOT NULL)")
 
                 db.commit()
 
         except Exception as e:
-            print("Error initializing DB")
+            print("Error initializing Tables")
             print(traceback.format_exc())
         finally:
             db.close()

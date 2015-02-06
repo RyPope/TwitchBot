@@ -7,8 +7,6 @@ class SpamPlugin(BasePlugin):
         self.className = self.__class__.__name__
         self.queryHelper = QueryHelper()
 
-        self.spamMessages = self.queryHelper.getSpamMessages()
-
         self.registerAll(self.className, self.msgHandler)
         self.registerCommand(self.className, "addSpam", self.addSpam)
         self.registerCommand(self.className, "removeSpam", self.removeSpam)
