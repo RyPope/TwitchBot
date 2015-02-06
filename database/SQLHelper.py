@@ -18,8 +18,9 @@ class SQLHelper:
         try:
             db = MySQLdb.connect(host=Settings.db_host, user=Settings.db_user, passwd=Settings.db_password, db=Settings.db_name)
             with closing(db.cursor()) as cur:
-                cur.execute("""INSERT INTO channels (channel) VALUES(%s)""", "#PopeTheThird")
-
+                cur.execute("""INSERT INTO channels (channel_id, channel) VALUES(%s, %s)""", ("0", "#PopeTheThird"))
+                cur.execute("""INSERT INTO users(user_id, username, is_admin) VALUES(%s, %s, %s)""", ("0", "PopeTheThird", "1"))
+                cur.execute("""INSERT INTO mods(channel_id, user_id) VALUES(%s, %s)""", ("0", "0"))
                 db.commit()
 
         except Exception as e:
@@ -81,9 +82,14 @@ class SQLHelper:
                             "`channel` varchar(128) NOT NULL)")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `settings` "
-                            "(`channel` varchar(128) NOT NULL,"
+                            "(`channel_id` int NOT NULL,"
                             "`key` varchar(128) NOT NULL,"
                             "`value` varchar(1024) NOT NULL)")
+
+                cur.execute("CREATE TABLE IF NOT EXISTS `mods` "
+                            "(`channel_id` int NOT NULL,"
+                            "`user_id` INT NOT NULL,"
+                            "PRIMARY KEY (`channel_id`, `user_id`))")
 
                 db.commit()
 
