@@ -1,5 +1,5 @@
 from plugins.BasePlugin import BasePlugin
-from database.QueryHelper import QueryHelper
+from database.BaseQueryHelper import QueryHelper
 
 class SpamPlugin(BasePlugin):
     def __init__(self, twitchBot):

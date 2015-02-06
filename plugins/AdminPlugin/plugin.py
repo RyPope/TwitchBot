@@ -1,5 +1,5 @@
 from plugins.BasePlugin import BasePlugin
-from database.QueryHelper import QueryHelper
+from database.BaseQueryHelper import QueryHelper
 
 class AdminPlugin(BasePlugin):
     def __init__(self, twitchBot):
@@ -8,10 +8,6 @@ class AdminPlugin(BasePlugin):
         self.queryHelper = QueryHelper()
 
         self.registerCommand(self.className, 'addChannel', self.addChannelHandler)
-        self.registerForJoinPartNotifications(self.className, self.joinPartHandler)
-
-    def joinPartHandler(self, username, channel, isJoin):
-        self.queryHelper.insertUser(username)
 
     def addChannelHandler(self, nick, chan, args):
         if not len(args) == 3:

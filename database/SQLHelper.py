@@ -66,15 +66,16 @@ class SQLHelper:
             db = self.getConnection()
             with closing(db.cursor()) as cur:
                 cur.execute("CREATE TABLE IF NOT EXISTS `channels` "
-                            "(`channel_id` int NOT NULL,"
+                            "(`channel_id` int NOT NULL AUTO_INCREMENT,"
                             "`channel` varchar(128) NOT NULL,"
                             "`enabled` tinyint(1) DEFAULT 1,"
                             "PRIMARY KEY (`channel_id`))")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `users` "
-                            "(`user_id` int NOT NULL,"
+                            "(`user_id` int NOT NULL AUTO_INCREMENT,"
                             "`username` varchar(128) NOT NULL,"
                             "`is_admin` tinyint(1) DEFAULT 0,"
+                            "`first_seen` datetime DEFAULT CURRENT_TIMESTAMP,"
                             "PRIMARY KEY (`user_id`))")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `disabled_plugins` "

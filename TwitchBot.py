@@ -10,7 +10,7 @@ import inspect
 from threading import Thread
 from plugins.BasePlugin import BasePlugin
 from util.BaseSettings import Settings
-from database.QueryHelper import QueryHelper
+from database.BaseQueryHelper import QueryHelper
 
 class TwitchBot:
     def __init__(self):
@@ -55,14 +55,14 @@ class TwitchBot:
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
-        print(ircMessage)
+        # print(ircMessage)
 
         nick = ircMessage.split('!')[0][1:]
 
-        if ircMessage.find(' PRIVMSG #') != -1: # Message to a channel.
+        if ircMessage.find(' PRIVMSG #') != -1:  # Message to a channel.
 
             chan = ircMessage.split(' ')[2]
-            msg = ircMessage.split(' PRIVMSG '+ chan +' :')[1]
+            msg = ircMessage.split(' PRIVMSG ' + chan + ' :')[1]
 
             for pluginDict in self.commands:
                 if re.search('^' + Settings.irc_trigger + pluginDict['regex'], msg, re.IGNORECASE) \
@@ -85,7 +85,7 @@ class TwitchBot:
 
             print(nick + " joined " + chan)
             for handler in self.joinPartHandlers:
-                if self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
+                if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                     handler['handler'](nick, chan, True)
 
         elif ircMessage.find('PART ') != -1:
