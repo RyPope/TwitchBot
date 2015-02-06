@@ -17,7 +17,6 @@ class TwitchBot:
         self.ircSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.irc_host = Settings.irc_host
         self.irc_chan = '#' + Settings.irc_channel.lower()
-
         self.connected = False
         self._pluginFolder = './plugins/'
         self._mainModule = 'plugin'
@@ -25,8 +24,8 @@ class TwitchBot:
         self.commands = []
         self.msgRegister = []
         self.joinPartHandlers = []
-        self.modHandlers = []
         self.loadedPluginNames = []
+
         self.queryHelper = QueryHelper()
 
     def kill(self):
@@ -45,6 +44,7 @@ class TwitchBot:
             self.ircSock.send(str("JOIN " + channel.channel.lower() + "\r\n").encode('UTF-8'))
             time.sleep(.5)
 
+
     def registerCommand(self, className, command, pluginFunction):
         self.commands.append( {'regex': command, 'handler':pluginFunction, 'plugin':className} )
 
@@ -54,15 +54,12 @@ class TwitchBot:
     def registerForJoinPartNotifications(self, className, pluginFunction):
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
-    def registerForModNotifications(self, className, pluginFunction):
-        self.modHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
-
     def handleIRCMessage(self, ircMessage):
-        # print(ircMessage)
+        print(ircMessage)
 
         nick = ircMessage.split('!')[0][1:]
 
-        if ircMessage.find(' PRIVMSG #') != -1:
+        if ircMessage.find(' PRIVMSG #') != -1: # Message to a channel.
 
             chan = ircMessage.split(' ')[2]
             msg = ircMessage.split(' PRIVMSG '+ chan +' :')[1]
@@ -100,25 +97,6 @@ class TwitchBot:
                 if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                     handler['handler'](nick, chan, False)
 
-        elif ircMessage.find('MODE '+ self.irc_chan +' +o') != -1:
-            nick = ircMessage.split(' ')[-1]
-            chan = ircMessage.split(' ')[2]
-
-            if nick.lower() != Settings.irc_username.lower():
-                print("Mod joined " + chan + ": " + nick)
-                for handler in self.modHandlers:
-                    if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
-                        handler['handler'](nick, chan, True)
-
-        elif ircMessage.find('MODE ' + self.irc_chan + ' -o') != -1:
-            nick = ircMessage.split(' ')[-1]
-            chan = ircMessage.split(' ')[2]
-
-            if nick.lower() != Settings.irc_username.lower():
-                print("Mod left " + chan + ": " + nick)
-                for handler in self.modHandlers:
-                    if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
-                        handler['handler'](nick, chan, False)
         else:
             pass
 

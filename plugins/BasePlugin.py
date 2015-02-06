@@ -14,8 +14,5 @@ class BasePlugin(object):
     def registerForJoinPartNotifications(self, className, handler):
         self.twitchy.registerForJoinPartNotifications(className, handler)
 
-    def registerForModNotifications(self, className, handler):
-        self.twitchy.registerForModNotifications(className, handler)
-
     def sendMessage(self, className, chan, message):
         self.twitchy.sendMessage(className, chan, message)
