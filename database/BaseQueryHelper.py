@@ -51,14 +51,87 @@ class QueryHelper():
             db = self.sqlHelper.getConnection()
 
             with closing(db.cursor()) as cur:
-                cur.execute("""SELECT user FROM admins WHERE username = %s""", (user,))
+                cur.execute("""SELECT is_admin FROM users WHERE username = %s""", (user,))
 
-                result = cur.fetchone()
+                result = cur.fetchone()[0]
                 if not result == None:
-                    admin = True
+                    admin = int(result) == 1
 
         except Exception as e:
             print(traceback.format_exc())
         finally:
             db.close()
             return admin
+
+    def addChannel(self, channel, moderator):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                cur.execute("""INSERT IGNORE INTO channels (channel) VALUES(%s)""", (channel,))
+                db.commit()
+
+                channel_id = self.getChannelID(channel)
+                user_id = self.getUserID(moderator)
+
+                cur.execute("""INSERT IGNORE INTO mods (channel_id, user_id) VALUES(%s, %s)""", (channel_id, user_id))
+                db.commit()
+
+        except Exception as e:
+            print("Error inserting new channel")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
+    def removeChannel(self, channel):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                channel_id = self.getChannelID(channel)
+                cur.execute("""DELETE FROM channels WHERE channel_id = %s""", (channel_id,))
+                cur.execute("""DELETE FROM mods WHERE channel_id = %s""", (channel_id,))
+                db.commit()
+
+        except Exception as e:
+            print("Error inserting new channel")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
+    def getChannelID(self, channel):
+        channel_id = None
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("""SELECT channel_id FROM channels WHERE channel = %s""", (channel,))
+
+                result = cur.fetchone()[0]
+                if not result == None:
+                    channel_id = result
+
+        except Exception as e:
+            print("Error fetching channel ID")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return channel_id
+
+    def getUserID(self, username):
+        user_id = None
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("""SELECT user_id FROM users WHERE username = %s""", (username,))
+
+                result = cur.fetchone()[0]
+                if not result == None:
+                    user_id = result
+
+        except Exception as e:
+            print("Error fetching user ID")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return user_id
+

@@ -44,6 +44,7 @@ class TwitchBot:
             self.ircSock.send(str("JOIN " + channel.channel.lower() + "\r\n").encode('UTF-8'))
             time.sleep(.5)
 
+        # self.sendMessage("AdminPlugin", "#popethethird", "message")
 
     def registerCommand(self, className, command, pluginFunction):
         self.commands.append( {'regex': command, 'handler':pluginFunction, 'plugin':className} )
@@ -55,7 +56,7 @@ class TwitchBot:
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
-        # print(ircMessage)
+        print(ircMessage)
 
         nick = ircMessage.split('!')[0][1:]
 
@@ -66,7 +67,7 @@ class TwitchBot:
 
             for pluginDict in self.commands:
                 if re.search('^' + Settings.irc_trigger + pluginDict['regex'], msg, re.IGNORECASE) \
-                        and self.queryHelper.checkPluginDisabled(chan, pluginDict['plugin']):
+                        and not self.queryHelper.checkPluginDisabled(chan, pluginDict['plugin']):
                     handler = pluginDict['handler']
                     args = msg.split(" ")
                     handler(nick, chan, args)

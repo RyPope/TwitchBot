@@ -92,6 +92,7 @@ class SQLHelper:
                             "`user_id` INT NOT NULL,"
                             "PRIMARY KEY (`channel_id`, `user_id`))")
 
+
                 db.commit()
 
         except Exception as e:
