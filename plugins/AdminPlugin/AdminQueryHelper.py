@@ -11,27 +11,7 @@ class AdminQueryHelper():
         self.sqlHelper = SQLHelper()
 
     def isMod(self, username, channel):
-        mod = False
-        try:
-            db = self.sqlHelper.getConnection()
-
-            with closing(db.cursor()) as cur:
-                user_id = self.queryHelper.getUserID(username)
-                channel_id = self.queryHelper.getChannelID(channel)
-
-                cur.execute("""SELECT COUNT(*) FROM mods
-                WHERE user_id = %s
-                AND channel_id = %s""", (user_id, channel_id))
-
-                result = cur.fetchone()
-                if not result == None:
-                    mod = int(result[0]) == 1
-
-        except Exception as e:
-            print(traceback.format_exc())
-        finally:
-            db.close()
-            return mod
+        return self.queryHelper.isMod(username, channel)
 
     def isAdmin(self, username):
         return self.queryHelper.isAdmin(username)

@@ -3,8 +3,6 @@ from database.SQLHelper import SQLHelper
 from database.BaseQueryHelper import BaseQueryHelper
 from contextlib import closing
 import traceback
-from warnings import filterwarnings, resetwarnings
-import MySQLdb
 
 class LoggingQueryHelper():
     def __init__(self):

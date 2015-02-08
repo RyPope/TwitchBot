@@ -150,3 +150,26 @@ class BaseQueryHelper():
             print(traceback.format_exc())
         finally:
             db.close()
+
+    def isMod(self, username, channel):
+        mod = False
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                user_id = self.getUserID(username)
+                channel_id = self.getChannelID(channel)
+
+                cur.execute("""SELECT COUNT(*) FROM mods
+                WHERE user_id = %s
+                AND channel_id = %s""", (user_id, channel_id))
+
+                result = cur.fetchone()
+                if not result is None:
+                    mod = int(result[0]) == 1
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return mod
