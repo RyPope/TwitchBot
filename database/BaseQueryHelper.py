@@ -4,7 +4,7 @@ from contextlib import closing
 import traceback
 from objects.channel import Channel
 
-class QueryHelper():
+class BaseQueryHelper():
     def __init__(self):
         self.sqlHelper = SQLHelper()
 
@@ -122,6 +122,7 @@ class QueryHelper():
             db = self.sqlHelper.getConnection()
 
             with closing(db.cursor()) as cur:
+                self.insertUser(username)
                 cur.execute("""SELECT user_id FROM users WHERE username = %s""", (username,))
 
                 result = cur.fetchone()[0]
@@ -135,3 +136,17 @@ class QueryHelper():
             db.close()
             return user_id
 
+    def insertUser(self, username):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                cur.execute("""INSERT IGNORE INTO users
+                (username)
+                VALUES(%s)""", (username,))
+                db.commit()
+
+        except Exception as e:
+            print("Error inserting new user")
+            print(traceback.format_exc())
+        finally:
+            db.close()

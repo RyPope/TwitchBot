@@ -10,7 +10,7 @@ import inspect
 from threading import Thread
 from plugins.BasePlugin import BasePlugin
 from util.BaseSettings import Settings
-from database.BaseQueryHelper import QueryHelper
+from database.BaseQueryHelper import BaseQueryHelper
 
 class TwitchBot:
     def __init__(self):
@@ -26,7 +26,7 @@ class TwitchBot:
         self.joinPartHandlers = []
         self.loadedPluginNames = []
 
-        self.queryHelper = QueryHelper()
+        self.queryHelper = BaseQueryHelper()
 
     def kill(self):
         for p in self._plugins:
@@ -41,10 +41,14 @@ class TwitchBot:
         self.ircSock.send(str("NICK " + Settings.irc_username + "\r\n").encode('UTF-8'))
 
         for channel in self.queryHelper.getAllChannels():
-            self.ircSock.send(str("JOIN " + channel.channel.lower() + "\r\n").encode('UTF-8'))
+            self.joinChannel(channel.channel.lower())
             time.sleep(.5)
 
-        # self.sendMessage("AdminPlugin", "#popethethird", "message")
+    def joinChannel(self, channel):
+        self.ircSock.send(str("JOIN " + channel.lower() + "\r\n").encode('UTF-8'))
+
+    def leaveChannel(self, channel):
+        self.ircSock.send(str("PART " + channel.lower() + "\r\n").encode('UTF-8'))
 
     def registerCommand(self, className, command, pluginFunction):
         self.commands.append( {'regex': command, 'handler':pluginFunction, 'plugin':className} )
@@ -52,7 +56,7 @@ class TwitchBot:
     def registerAll(self, className, pluginFunction):
         self.msgRegister.append( {'handler':pluginFunction, 'plugin':className} )
 
-    def registerForJoinPartNotifications(self, className, pluginFunction):
+    def registerJoinPartNotifications(self, className, pluginFunction):
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):

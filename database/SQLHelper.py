@@ -8,18 +8,17 @@ from warnings import filterwarnings, resetwarnings
 class SQLHelper:
     def __init__(self):
         filterwarnings('ignore', category = MySQLdb.Warning) # SQL warns on DB creation for whatever reason.
-        self.dropDB()
+        # self.dropDB()
         self.initDB()
         self.initTables()
-        self.insertStubData()
-        resetwarnings()
+        # self.insertStubData()
 
     def insertStubData(self):
         try:
             db = MySQLdb.connect(host=Settings.db_host, user=Settings.db_user, passwd=Settings.db_password, db=Settings.db_name)
             with closing(db.cursor()) as cur:
                 cur.execute("""INSERT INTO channels (channel_id, channel) VALUES(%s, %s)""", ("0", "#PopeTheThird"))
-                cur.execute("""INSERT INTO users(user_id, username, is_admin) VALUES(%s, %s, %s)""", ("0", "PopeTheThird", "1"))
+                cur.execute("""INSERT INTO users(user_id, username, is_admin) VALUES(%s, %s, %s)""", ("0", "popethethird", "1"))
                 cur.execute("""INSERT INTO mods(channel_id, user_id) VALUES(%s, %s)""", ("0", "0"))
                 db.commit()
 
@@ -67,13 +66,13 @@ class SQLHelper:
             with closing(db.cursor()) as cur:
                 cur.execute("CREATE TABLE IF NOT EXISTS `channels` "
                             "(`channel_id` int NOT NULL AUTO_INCREMENT,"
-                            "`channel` varchar(128) NOT NULL,"
+                            "`channel` varchar(128) NOT NULL UNIQUE,"
                             "`enabled` tinyint(1) DEFAULT 1,"
                             "PRIMARY KEY (`channel_id`))")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `users` "
                             "(`user_id` int NOT NULL AUTO_INCREMENT,"
-                            "`username` varchar(128) NOT NULL,"
+                            "`username` varchar(128) NOT NULL UNIQUE,"
                             "`is_admin` tinyint(1) DEFAULT 0,"
                             "`first_seen` datetime DEFAULT CURRENT_TIMESTAMP,"
                             "PRIMARY KEY (`user_id`))")
@@ -91,7 +90,6 @@ class SQLHelper:
                             "(`channel_id` int NOT NULL,"
                             "`user_id` INT NOT NULL,"
                             "PRIMARY KEY (`channel_id`, `user_id`))")
-
 
                 db.commit()
 
