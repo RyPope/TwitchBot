@@ -81,10 +81,11 @@ class SQLHelper:
                             "(`plugin` varchar(128) NOT NULL,"
                             "`channel` varchar(128) NOT NULL)")
 
-                cur.execute("CREATE TABLE IF NOT EXISTS `settings` "
+                cur.execute("CREATE TABLE IF NOT EXISTS `commands` "
                             "(`channel_id` int NOT NULL,"
-                            "`key` varchar(128) NOT NULL,"
-                            "`value` varchar(1024) NOT NULL)")
+                            "`key` VARCHAR(128) NOT NULL,"
+                            "`value` VARCHAR(1024) NOT NULL,"
+                            "PRIMARY KEY (`channel_id`, `key`))")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `mods` "
                             "(`channel_id` int NOT NULL,"

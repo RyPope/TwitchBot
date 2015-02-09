@@ -73,3 +73,73 @@ class AdminQueryHelper():
         finally:
             db.close()
             return mods
+
+    def addCommand(self, channel, trigger, output):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+
+                cur.execute("""INSERT INTO `commands` (`channel_id`, `key`, `value`) VALUES (%s, %s, %s);""", (channel_id, trigger, output))
+                db.commit()
+
+        except Exception as e:
+            print("Error inserting new command")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
+    def removeCommand(self, channel, key):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+
+                cur.execute("""DELETE FROM `commands` WHERE `channel_id` = %s AND `key` = %s""", (channel_id, key))
+                db.commit()
+
+        except Exception as e:
+            print("Error removing command")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
+    def viewCommands(self, channel):
+        commands = []
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+
+                cur.execute("""SELECT `key` FROM `commands` WHERE `channel_id` = %s""", (channel_id,))
+                rows = cur.fetchall()
+
+                for row in rows:
+                    commands.append(str(row[0]))
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return commands
+
+    def getCommand(self, channel, key):
+        value = None
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+
+                cur.execute("""SELECT `value` FROM `commands` WHERE `channel_id` = %s AND `key` = %s""", (channel_id, key))
+
+                result = cur.fetchone()
+                if not result is None:
+                    value = str(result[0])
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return value

@@ -36,7 +36,7 @@ class LoggingQueryHelper():
                 channel_id = self.queryHelper.getChannelID(channel)
                 user_id = self.queryHelper.getUserID(username)
 
-                cur.execute("""INSERT IGNORE INTO logs (channel_id, user_id, msg) VALUES(%s, %s, %s)""", (channel_id, user_id, msg))
+                cur.execute("""INSERT IGNORE INTO `logs` (`channel_id`, `user_id`, `msg`) VALUES(%s, %s, %s)""", (channel_id, user_id, msg))
                 db.commit()
 
         except Exception as e:

@@ -10,8 +10,8 @@ class LoggingPlugin(BasePlugin):
         self.registerAll(self.className, self.messageHandler)
         self.registerJoinPartNotifications(self.className, self.joinPartHandler)
 
-    def messageHandler(self, username, channel, msg):
-        self.loggingQueryHelper.insertMsg(username, channel, msg)
+    def messageHandler(self, username, channel, args):
+        self.loggingQueryHelper.insertMsg(username, channel, " ".join(args))
 
     def joinPartHandler(self, username, channel, isJoin):
         self.loggingQueryHelper.insertUser(username)

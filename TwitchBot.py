@@ -79,7 +79,8 @@ class TwitchBot:
             for pluginDict in self.msgRegister:
                 if not self.queryHelper.checkPluginDisabled(chan, pluginDict['plugin']):
                     handler = pluginDict['handler']
-                    handler(nick, chan, msg)
+                    args = msg.split(" ")
+                    handler(nick, chan, args)
 
         elif ircMessage.find('PING ') != -1:
             self.ircSock.send(str("PING :pong\n").encode('UTF-8'))
