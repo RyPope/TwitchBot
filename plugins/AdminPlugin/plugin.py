@@ -11,6 +11,7 @@ class AdminPlugin(BasePlugin):
         self.registerCommand(self.className, 'removechannel', self.removeChannelHandler)
         self.registerCommand(self.className, 'addmod', self.addModHandler)
         self.registerCommand(self.className, 'removemod', self.removeModHandler)
+        self.registerCommand(self.className, 'viewmods', self.viewModsHandler)
 
     def addChannelHandler(self, nick, chan, args):
         if not len(args) == 3:
@@ -47,3 +48,7 @@ class AdminPlugin(BasePlugin):
         else:
             self.queryHelper.removeMod(args[1], chan)
             self.sendMessage(self.className, chan, "Removed %s as a moderator from %s" % (args[1], chan))
+
+    def viewModsHandler(self, user, chan, args):
+        mods = self.queryHelper.viewMods(chan)
+        self.sendMessage(self.className, chan, "The mods for %s are %s." % (chan, ", ".join(mods)))

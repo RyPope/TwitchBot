@@ -173,3 +173,21 @@ class BaseQueryHelper():
         finally:
             db.close()
             return mod
+
+    def getUsername(self, user_id):
+        username = ""
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("""SELECT username FROM users WHERE user_id = %s""", (user_id,))
+
+                result = cur.fetchone()
+                if not result is None:
+                    username = str(result[0])
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return username

@@ -53,3 +53,23 @@ class AdminQueryHelper():
             print(traceback.format_exc())
         finally:
             db.close()
+
+    def viewMods(self, channel):
+        mods = []
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+
+                cur.execute("""SELECT user_id FROM mods WHERE channel_id = %s""", (channel_id,))
+                rows = cur.fetchall()
+
+                for row in rows:
+                    mods.append(self.queryHelper.getUsername(row[0]))
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return mods
