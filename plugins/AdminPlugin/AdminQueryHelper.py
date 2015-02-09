@@ -80,7 +80,8 @@ class AdminQueryHelper():
             with closing(db.cursor()) as cur:
                 channel_id = self.queryHelper.getChannelID(channel)
 
-                cur.execute("""INSERT INTO `commands` (`channel_id`, `key`, `value`) VALUES (%s, %s, %s);""", (channel_id, trigger, output))
+                cur.execute("""INSERT INTO `commands` (`channel_id`, `key`, `value`)
+                VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE `value` = %s;""", (channel_id, trigger, output, output))
                 db.commit()
 
         except Exception as e:
