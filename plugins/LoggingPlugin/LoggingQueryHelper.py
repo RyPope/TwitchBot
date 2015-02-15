@@ -47,3 +47,24 @@ class LoggingQueryHelper():
 
     def insertUser(self, username):
         return self.queryHelper.insertUser(username)
+
+    def getMessages(self, username, channel):
+        messages = []
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+                user_id = self.queryHelper.getUserID(username)
+
+                cur.execute("""SELECT * FROM `logs` WHERE `channel_id` = %s AND `user_id` = %s""", (channel_id, user_id))
+                rows = cur.fetchall()
+
+                for row in rows:
+                    messages.append(Message(row))
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return messages

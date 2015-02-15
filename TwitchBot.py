@@ -25,6 +25,7 @@ class TwitchBot:
         self.msgRegister = []
         self.joinPartHandlers = []
         self.loadedPluginNames = []
+        self.moddedInList = []
 
         self.queryHelper = BaseQueryHelper()
 
@@ -32,8 +33,13 @@ class TwitchBot:
         for p in self._plugins:
             p._kill()
 
-    def sendMessage(self, className, chan, message):
-        self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
+    def sendMessage(self, className, chan, message, needMod=True):
+        # if (needMod and chan in self.moddedInList) or (not needMod):
+            self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
+        # else:
+        #     print("Channel %s attempted to use commands without modding bot" % chan)
+
+
 
     def connect(self, port):
         self.ircSock.connect((self.irc_host, port))
@@ -41,8 +47,9 @@ class TwitchBot:
         self.ircSock.send(str("NICK " + Settings.irc_username + "\r\n").encode('UTF-8'))
 
         for channel in self.queryHelper.getAllChannels():
-            self.joinChannel(channel.channel.lower())
-            time.sleep(.5)
+            if self.queryHelper.channelIsEnabled(channel.channel.lower()):
+                self.joinChannel(channel.channel.lower())
+                time.sleep(.5)
 
     def joinChannel(self, channel):
         self.ircSock.send(str("JOIN " + channel.lower() + "\r\n").encode('UTF-8'))
@@ -60,12 +67,10 @@ class TwitchBot:
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
-        print(ircMessage)
-
         nick = ircMessage.split('!')[0][1:]
 
-        if ircMessage.find(' PRIVMSG #') != -1:  # Message to a channel.
-
+        # Message to a channel
+        if ircMessage.find(' PRIVMSG #') != -1:
             chan = ircMessage.split(' ')[2]
             msg = ircMessage.split(' PRIVMSG ' + chan + ' :')[1]
 
@@ -82,9 +87,7 @@ class TwitchBot:
                     args = msg.split(" ")
                     handler(nick, chan, args)
 
-        elif ircMessage.find('PING ') != -1:
-            self.ircSock.send(str("PING :pong\n").encode('UTF-8'))
-
+        # User joined channel
         elif ircMessage.find('JOIN ') != -1:
             nick = ircMessage.split('!')[0][1:]
             chan = ircMessage.split(' ')[2]
@@ -94,6 +97,7 @@ class TwitchBot:
                 if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                     handler['handler'](nick, chan, True)
 
+        # User left channel
         elif ircMessage.find('PART ') != -1:
             nick = ircMessage.split('!')[0][1:]
             chan = ircMessage.split(' ')[2]
@@ -103,6 +107,19 @@ class TwitchBot:
                 if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                     handler['handler'](nick, chan, False)
 
+        # # User oped in channel
+        elif ircMessage.find('MODE ') != -1:
+            nick = ircMessage.split(' ')[-1]
+            chan = ircMessage.split(' ')[2]
+            op = ircMessage.split(' ')[3]
+
+            if nick.lower() == Settings.irc_username.lower():
+                if op == "+o":
+                    self.moddedInList.append(chan)
+                    print("Modded in %s" % chan)
+                else:
+                    self.moddedInList.remove(chan)
+                    print("Unmodded in %s" % chan)
         else:
             pass
 

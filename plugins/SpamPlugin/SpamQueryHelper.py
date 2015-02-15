@@ -82,3 +82,9 @@ class SpamQueryHelper():
 
     def isAdmin(self, username):
         return self.queryHelper.isAdmin(username)
+
+    def prohibitLinks(self, channel):
+        self.queryHelper.setSetting(channel, "links_allowed", 0);
+
+    def allowLinks(self, channel):
+        self.queryHelper.setSetting(channel, "links_allowed", 1);

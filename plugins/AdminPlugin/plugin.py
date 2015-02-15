@@ -16,6 +16,8 @@ class AdminPlugin(BasePlugin):
         self.registerCommand(self.className, 'addcommand', self.addCommandHandler)
         self.registerCommand(self.className, 'removecommand', self.removeCommandHandler)
         self.registerCommand(self.className, 'commands', self.viewCommandsHandler)
+        self.registerCommand(self.className, 'signup', self.betaSignUpHandler)
+
         self.registerAll(self.className, self.commandHandler)
 
     def addChannelHandler(self, nick, chan, args):
@@ -26,7 +28,8 @@ class AdminPlugin(BasePlugin):
         else:
             self.queryHelper.addChannel(args[1], args[2])
             self.joinChannel(args[1])
-            self.sendMessage(self.className, args[1], "Hello! This channel has been added to my list. The current moderator is %s." % args[2])
+            self.sendMessage(self.className, args[1], "Hello! This channel has been added to my list. The current moderator is %s. To prevent rate limiting,"
+                                                      "I will only be able to communicate if I am added as a mod." % args[2], False)
 
     def removeChannelHandler(self, nick, chan, args):
         if not len(args) == 2:
@@ -59,7 +62,7 @@ class AdminPlugin(BasePlugin):
         self.sendMessage(self.className, chan, "The mods for %s are %s." % (chan, ", ".join(mods)))
 
     def addCommandHandler(self, user, chan, args):
-        if not len(args) == 3:
+        if len(args) < 3:
             self.sendMessage(self.className, chan, "Invalid Syntax, use addcommand <trigger> <output>")
         elif not (self.queryHelper.isMod(user, chan) or self.queryHelper.isAdmin(user)):
             self.sendMessage(self.className, chan, "Only channel moderators may use this command.")
@@ -87,3 +90,8 @@ class AdminPlugin(BasePlugin):
 
             if not value is None:
                 self.sendMessage(self, chan, value)
+
+    def betaSignUpHandler(self, user, chan, args):
+        self.queryHelper.addChannel("#%s" % user, user, False)
+        self.sendMessage(self.className, chan, "Signed up for beta. This bot will join your stream channel when beta begins.")
+

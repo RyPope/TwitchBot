@@ -16,8 +16,8 @@ class AdminQueryHelper():
     def isAdmin(self, username):
         return self.queryHelper.isAdmin(username)
 
-    def addChannel(self, channel, moderator):
-        return self.queryHelper.addChannel(channel, moderator)
+    def addChannel(self, channel, moderator, enabled=True):
+        return self.queryHelper.addChannel(channel, moderator, enabled)
 
     def removeChannel(self, channel):
         return self.queryHelper.removeChannel(channel)

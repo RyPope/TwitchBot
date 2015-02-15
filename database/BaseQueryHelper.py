@@ -45,6 +45,27 @@ class BaseQueryHelper():
             db.close()
             return disabled
 
+    def channelIsEnabled(self, channel):
+        enabled = False
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                channel_id = self.getChannelID(channel)
+                cur.execute("""SELECT enabled FROM channels WHERE channel_id = %s""", (channel_id,))
+
+                result = cur.fetchone()
+                if result == None:
+                    enabled = False
+                elif result[0] == 1:
+                    enabled = True
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return enabled
+
     def isAdmin(self, user):
         admin = False
         try:
@@ -63,11 +84,12 @@ class BaseQueryHelper():
             db.close()
             return admin
 
-    def addChannel(self, channel, moderator):
+    def addChannel(self, channel, moderator, enabled=True):
         try:
             db = self.sqlHelper.getConnection()
             with closing(db.cursor()) as cur:
-                cur.execute("""INSERT IGNORE INTO channels (channel) VALUES(%s)""", (channel,))
+                enabled_int = 1 if enabled else 0
+                cur.execute("""INSERT IGNORE INTO channels (channel, enabled) VALUES(%s, %s)""", (channel, enabled_int))
                 db.commit()
 
                 channel_id = self.getChannelID(channel)
@@ -191,3 +213,19 @@ class BaseQueryHelper():
         finally:
             db.close()
             return username
+
+    def setSetting(self, channel, key, value):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                channel_id = self.getChannelID(channel)
+
+                cur.execute("""INSERT INTO `settings` (`channel_id`, `key`, `value`)
+                VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE `value` = %s;""", (channel_id, key, value, value))
+                db.commit()
+
+        except Exception as e:
+            print("Error inserting new setting")
+            print(traceback.format_exc())
+        finally:
+            db.close()

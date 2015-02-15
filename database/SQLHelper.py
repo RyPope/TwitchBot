@@ -92,6 +92,12 @@ class SQLHelper:
                             "`user_id` INT NOT NULL,"
                             "PRIMARY KEY (`channel_id`, `user_id`))")
 
+                cur.execute("CREATE TABLE IF NOT EXISTS `settings` "
+                            "(`channel_id` int NOT NULL,"
+                            "`key` VARCHAR(128) NOT NULL,"
+                            "`value` VARCHAR(1024) NOT NULL,"
+                            "PRIMARY KEY (`channel_id`, `key`))")
+
                 db.commit()
 
         except Exception as e:
