@@ -17,6 +17,7 @@ class GameStatsPlugin(BasePlugin):
 
         self.registerCommand(self.className, "live", self.liveListHandler)
         self.registerCommand(self.className, "upcoming", self.upcomingListHandler)
+        self.registerCommand(self.className, "recent", self.recentListHandler)
 
     def liveListHandler(self, user, chan, args):
         if len(args) < 2:
@@ -65,6 +66,34 @@ class GameStatsPlugin(BasePlugin):
                 for game in self.lolUpcomingList:
                     self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s. Time To Match: %s"
                                      % (game.id, game.opp1, game.bet1, game.opp2, game.bet2, game.timeUntil))
+            else:
+                self.sendMessage(self.className, chan, "Invalid game type, select either csgo, dota2 or lol")
+
+    def recentListHandler(self, user, chan, args):
+        if len(args) < 2:
+            self.sendMessage(self.className, chan, "Invalid syntax, please use recent <csgo | dota2 | lol>")
+        else:
+            if args[1] == "csgo":
+                if len(self.csgoRecentList) == 0:
+                    self.sendMessage(self.className, chan, "No recent matches for Counter Strike: Global Offensive")
+                for i in range(0, 5):
+                    game = self.csgoRecentList[i]
+                    self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s. Score: %s"
+                                     % (game.id, game.opp1, game.bet1, game.opp2, game.bet2, game.score))
+            elif args[1] == "dota2":
+                if len(self.dotaRecentList) == 0:
+                    self.sendMessage(self.className, chan, "No recent matches for Dota 2")
+                for i in range(0, 5):
+                    game = self.dotaRecentList[i]
+                    self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s. Score: %s"
+                                     % (game.id, game.opp1, game.bet1, game.opp2, game.bet2, game.score))
+            elif args[1] == "lol":
+                if len(self.lolRecentList) == 0:
+                    self.sendMessage(self.className, chan, "No recent matches for League of Legends")
+                for i in range(0, 5):
+                    game = self.lolRecentList[i]
+                    self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s. Score: %s"
+                                     % (game.id, game.opp1, game.bet1, game.opp2, game.bet2, game.score))
             else:
                 self.sendMessage(self.className, chan, "Invalid game type, select either csgo, dota2 or lol")
 
@@ -144,6 +173,9 @@ class GameStatsPlugin(BasePlugin):
                                 timeCol = cols[1].find("span", attrs={ "class" : "live-in" } )
                                 timeUntil = timeCol.text.strip()
                                 game.setTime(timeUntil)
+                            elif header == "Recent":
+                                winnerScore = cols[1].find("span", attrs={ "class" : "hidden" } ).text.strip()
+                                game.setScore(winnerScore)
 
                             if gameType == "csgo":
                                 if header == "Live":

@@ -114,10 +114,10 @@ class TwitchBot:
             op = ircMessage.split(' ')[3]
 
             if nick.lower() == Settings.irc_username.lower():
-                if op == "+o":
+                if op == "+o" and not chan in self.moddedInList:
                     self.moddedInList.append(chan)
                     print("Modded in %s" % chan)
-                else:
+                elif op == "-o" and chan in self.moddedInList:
                     self.moddedInList.remove(chan)
                     print("Unmodded in %s" % chan)
         else:
