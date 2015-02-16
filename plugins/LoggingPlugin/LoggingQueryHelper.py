@@ -90,7 +90,8 @@ class LoggingQueryHelper():
                 channel_id = self.queryHelper.getChannelID(channel)
                 user_id = self.queryHelper.getUserID(username)
 
-                cur.execute("""INSERT IGNORE INTO `joins` (`channel_id`, `user_id`, `joined`) VALUES(%s, %s, %s)""", (channel_id, user_id, time))
+                cur.execute("""INSERT INTO `joins` (`channel_id`, `user_id`, `joined`) VALUES(%s, %s, %s)
+                ON DUPLICATE KEY UPDATE `joined` = %s""", (channel_id, user_id, time, time))
                 db.commit()
 
         except Exception as e:
@@ -130,7 +131,8 @@ class LoggingQueryHelper():
                 channel_id = self.queryHelper.getChannelID(channel)
                 user_id = self.queryHelper.getUserID(username)
 
-                cur.execute("""UPDATE `time_spent` SET `time_spent` = `time_spent` + %s WHERE `user_id` = %s AND `channel_id` = %s""", (time, user_id, channel_id))
+                cur.execute("""INSERT INTO `time_spent` (`channel_id`, `user_id`) VALUES (%s, %s) ON DUPLICATE KEY
+                UPDATE `time_spent` = `time_spent` + %s""", (channel_id, user_id, time))
                 db.commit()
 
         except Exception as e:
@@ -138,3 +140,24 @@ class LoggingQueryHelper():
             print(traceback.format_exc())
         finally:
             db.close()
+
+    def getPoints(self, username, channel):
+        value = None
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+                user_id = self.queryHelper.getUserID(username)
+
+                cur.execute("""SELECT `time_spent` FROM `time_spent` WHERE `channel_id` = %s AND `user_id` = %s""", (channel_id, user_id))
+
+                result = cur.fetchone()
+                if not result is None:
+                    value = result[0]
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return value

@@ -11,9 +11,14 @@ from threading import Thread
 from plugins.BasePlugin import BasePlugin
 from util.BaseSettings import Settings
 from database.BaseQueryHelper import BaseQueryHelper
+from signal import *
+import sys
 
 class TwitchBot:
     def __init__(self):
+        for sig in (SIGINT, SIGTERM):
+            signal(sig, self.kill)
+
         self.ircSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.irc_host = Settings.irc_host
         self.irc_chan = '#' + Settings.irc_channel.lower()
@@ -30,14 +35,15 @@ class TwitchBot:
         self.queryHelper = BaseQueryHelper()
 
     def kill(self):
+        print("Twitch Bot Ending...")
         for p in self._plugins:
             p._kill()
 
     def sendMessage(self, className, chan, message, needMod=True):
-        # if (needMod and chan in self.moddedInList) or (not needMod):
+        if (needMod and chan in self.moddedInList) or (not needMod):
             self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
-        # else:
-        #     print("Channel %s attempted to use commands without modding bot" % chan)
+        else:
+            print("Channel %s attempted to use commands without modding bot" % chan)
 
 
 

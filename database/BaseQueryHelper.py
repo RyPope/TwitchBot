@@ -89,8 +89,11 @@ class BaseQueryHelper():
             db = self.sqlHelper.getConnection()
             with closing(db.cursor()) as cur:
                 enabled_int = 1 if enabled else 0
-                cur.execute("""INSERT IGNORE INTO channels (channel, enabled) VALUES(%s, %s)""", (channel, enabled_int))
-                db.commit()
+                cur.execute("""SELECT channel_id FROM channels WHERE channel = %s""", (channel,))
+
+                if cur.fetchone() is None:
+                    cur.execute("""INSERT IGNORE INTO channels(channel, enabled) VALUES(%s, %s)""", (channel, enabled_int))
+                    db.commit()
 
                 channel_id = self.getChannelID(channel)
                 user_id = self.getUserID(moderator)
@@ -162,10 +165,11 @@ class BaseQueryHelper():
         try:
             db = self.sqlHelper.getConnection()
             with closing(db.cursor()) as cur:
-                cur.execute("""INSERT IGNORE INTO users
-                (username)
-                VALUES(%s)""", (username,))
-                db.commit()
+                cur.execute("""SELECT user_id FROM users WHERE username = %s""", (username,))
+
+                if cur.fetchone() is None:
+                    cur.execute("""INSERT IGNORE INTO users(username) VALUES(%s)""", (username,))
+                    db.commit()
 
         except Exception as e:
             print("Error inserting new user")

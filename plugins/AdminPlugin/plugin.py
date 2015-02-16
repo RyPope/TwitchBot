@@ -28,8 +28,10 @@ class AdminPlugin(BasePlugin):
         else:
             self.queryHelper.addChannel(args[1], args[2])
             self.joinChannel(args[1])
-            self.sendMessage(self.className, args[1], "Hello! This channel has been added to my list. The current moderator is %s. To prevent rate limiting,"
-                                                      "I will only be able to communicate if I am added as a mod." % args[2], False)
+            self.sendMessage(self.className, args[1],
+                             """Hello! This channel has been added to my list. The current moderator is %s.
+                             To prevent rate limiting I will only be able to communicate if I am added as a mod.""" % (args[2]),
+                             False)
 
     def removeChannelHandler(self, nick, chan, args):
         if not len(args) == 2:
