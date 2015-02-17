@@ -5,7 +5,13 @@ from contextlib import closing
 import traceback
 
 
-class GameStatsQueryHelper():
+class GameQueryHelper():
     def __init__(self):
         self.queryHelper = BaseQueryHelper()
         self.sqlHelper = SQLHelper()
+
+    def isMod(self, username, channel):
+        return self.queryHelper.isMod(username, channel)
+
+    def isAdmin(self, username):
+        return self.queryHelper.isAdmin(username)

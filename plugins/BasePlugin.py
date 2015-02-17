@@ -19,3 +19,6 @@ class BasePlugin(object):
 
     def joinChannel(self, channel):
         self.twitchBot.joinChannel(channel)
+
+    def partChannel(self, channel):
+        self.twitchBot.partChannel(channel)

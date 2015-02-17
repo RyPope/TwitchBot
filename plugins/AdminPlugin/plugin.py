@@ -17,6 +17,7 @@ class AdminPlugin(BasePlugin):
         self.registerCommand(self.className, 'removecommand', self.removeCommandHandler)
         self.registerCommand(self.className, 'commands', self.viewCommandsHandler)
         self.registerCommand(self.className, 'signup', self.betaSignUpHandler)
+        self.registerCommand(self.className, 'say', self.sayHandler)
 
         self.registerAll(self.className, self.commandHandler)
 
@@ -39,6 +40,7 @@ class AdminPlugin(BasePlugin):
         elif not self.queryHelper.isAdmin(nick):
             self.sendMessage(self.className, chan, "Only admins may use this command.")
         else:
+            self.partChannel(args[1])
             self.queryHelper.removeChannel(args[1])
 
     def addModHandler(self, user, chan, args):
@@ -49,6 +51,14 @@ class AdminPlugin(BasePlugin):
         else:
             self.queryHelper.addMod(args[1], chan)
             self.sendMessage(self.className, chan, "Added %s as a moderator to %s" % (args[1], chan))
+
+    def sayHandler(self, user, chan, args):
+        if len(args) < 2:
+            self.sendMessage(self.className, chan, "Invalid Syntax, use say <message>")
+        elif not (self.queryHelper.isAdmin(user)):
+            self.sendMessage(self.className, chan, "Only admins may use this command.")
+        else:
+            self.sendMessage(self.className, chan, " ".join(args[1:]), False)
 
     def removeModHandler(self, user, chan, args):
         if not len(args) == 2:

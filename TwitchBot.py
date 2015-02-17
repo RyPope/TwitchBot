@@ -30,7 +30,7 @@ class TwitchBot:
         self.msgRegister = []
         self.joinPartHandlers = []
         self.loadedPluginNames = []
-        self.moddedInList = []
+        self.moddedInList = ['#popethethird']
 
         self.queryHelper = BaseQueryHelper()
 
@@ -45,6 +45,7 @@ class TwitchBot:
         else:
             print("Channel %s attempted to use commands without modding bot" % chan)
 
+        # self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
 
 
     def connect(self, port):
@@ -60,7 +61,7 @@ class TwitchBot:
     def joinChannel(self, channel):
         self.ircSock.send(str("JOIN " + channel.lower() + "\r\n").encode('UTF-8'))
 
-    def leaveChannel(self, channel):
+    def partChannel(self, channel):
         self.ircSock.send(str("PART " + channel.lower() + "\r\n").encode('UTF-8'))
 
     def registerCommand(self, className, command, pluginFunction):
@@ -73,6 +74,7 @@ class TwitchBot:
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
+        print("IRC: " + ircMessage)
         nick = ircMessage.split('!')[0][1:]
 
         # Message to a channel
@@ -92,6 +94,9 @@ class TwitchBot:
                     handler = pluginDict['handler']
                     args = msg.split(" ")
                     handler(nick, chan, args)
+
+        elif ircMessage.find('PING ') != -1:
+            self.ircSock.send(str("PING :pong\n").encode('UTF-8'))
 
         # User joined channel
         elif ircMessage.find('JOIN ') != -1:
@@ -144,8 +149,8 @@ class TwitchBot:
                 for ircMsg in ircMsgs:
                     msg = ircMsg.decode('utf-8')
                     Thread(target=self.handleIRCMessage, args=(msg,)).start()
-            except:
-                raise
+            except Exception as e:
+                print(traceback.format_exc())
 
     def loadPlugins(self):
         potentialPlugins = []
@@ -172,6 +177,13 @@ class TwitchBot:
             except Exception as e:
                 print("Error loading plugin.")
                 print(traceback.format_exc())
+
+    def reconnect(self):
+        try:
+            self.connect(6667)
+            self.run()
+        except Exception as e:
+            print(traceback.format_exc())
 
 if __name__ == "__main__":
     while True:
