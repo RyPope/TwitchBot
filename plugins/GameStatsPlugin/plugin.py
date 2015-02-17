@@ -17,54 +17,73 @@ class GameStatsPlugin(BasePlugin):
         self.registerCommand(self.className, "live", self.liveListHandler)
         self.registerCommand(self.className, "upcoming", self.upcomingListHandler)
         self.registerCommand(self.className, "recent", self.recentListHandler)
+        self.registerCommand(self.className, "info", self.infoHandler)
 
         self.updateMatches()
 
-    def liveListHandler(self, user, chan, args):
+    def infoHandler(self, username, channel, args):
         if len(args) < 2:
-            self.sendMessage(self.className, chan, "Invalid syntax, please use live <csgo | dota2 | lol | hearth | hots>")
+            self.sendMessage(self.className, channel, "Invalid syntax, please use info <game id>")
+        else:
+            matchLink = self.getLinkFromID(args[1])
+            if matchLink is None:
+                self.sendMessage(self.className, channel, "Invalid match ID")
+            else:
+                self.sendMessage(self.className, channel, "Please visit http://www.gosugamers.net%s for more match information." % matchLink)
+
+    def getLinkFromID(self, id):
+        games = [x for x in self.csgoLiveList if x.id == id]
+        for game in games:
+            return game.link
+
+        return None
+
+
+    def liveListHandler(self, username, channel, args):
+        if len(args) < 2:
+            self.sendMessage(self.className, channel, "Invalid syntax, please use live <csgo | dota2 | lol | hearth | hots>")
         else:
             if args[1] == "csgo":
                 if len(self.csgoLiveList) == 0:
-                    self.sendMessage(self.className, chan, "No matches are live for Counter Strike: Global Offensive")
+                    self.sendMessage(self.className, channel, "No matches are live for Counter Strike: Global Offensive")
                 for game in self.csgoLiveList:
-                    self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s"
+                    self.sendMessage(self.className, channel, "ID: %s - %s %s vs %s %s"
                                      % (game.id, game.opp1, game.bet1, game.opp2, game.bet2))
                     time.sleep(.5)
 
             elif args[1] == "dota2":
                 if len(self.dotaLiveList) == 0:
-                    self.sendMessage(self.className, chan, "No matches are live for Dota 2")
+                    self.sendMessage(self.className, channel, "No matches are live for Dota 2")
                 for game in self.dotaLiveList:
-                    self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s"
+                    self.sendMessage(self.className, channel, "ID: %s - %s %s vs %s %s"
                                      % (game.id, game.opp1, game.bet1, game.opp2, game.bet2))
                     time.sleep(.5)
 
             elif args[1] == "lol":
                 if len(self.lolLiveList) == 0:
-                    self.sendMessage(self.className, chan, "No matches are live for League of Legends")
+                    self.sendMessage(self.className, channel, "No matches are live for League of Legends")
                 for game in self.lolLiveList:
-                    self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s"
+                    self.sendMessage(self.className, channel, "ID: %s - %s %s vs %s %s"
                                      % (game.id, game.opp1, game.bet1, game.opp2, game.bet2))
                     time.sleep(.5)
 
             elif args[1] == "hearth":
                 if len(self.hearthLiveList) == 0:
-                    self.sendMessage(self.className, chan, "No matches are live for Hearthstone")
+                    self.sendMessage(self.className, channel, "No matches are live for Hearthstone")
                 for game in self.hearthLiveList:
-                    self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s"
+                    self.sendMessage(self.className, channel, "ID: %s - %s %s vs %s %s"
                                      % (game.id, game.opp1, game.bet1, game.opp2, game.bet2))
                     time.sleep(.5)
 
             elif args[1] == "hots":
                 if len(self.hotsLiveList) == 0:
-                    self.sendMessage(self.className, chan, "No matches are live for Heroes of the Storm")
+                    self.sendMessage(self.className, channel, "No matches are live for Heroes of the Storm")
                 for game in self.hotsLiveList:
-                    self.sendMessage(self.className, chan, "ID: %s - %s %s vs %s %s"
+                    self.sendMessage(self.className, channel, "ID: %s - %s %s vs %s %s"
                                      % (game.id, game.opp1, game.bet1, game.opp2, game.bet2))
                     time.sleep(.5)
             else:
-                self.sendMessage(self.className, chan, "Invalid game type, select either csgo, dota2, hearth, hots or lol")
+                self.sendMessage(self.className, channel, "Invalid game type, select either csgo, dota2, hearth, hots or lol")
 
     def upcomingListHandler(self, user, chan, args):
         if len(args) < 2:
@@ -234,6 +253,7 @@ class GameStatsPlugin(BasePlugin):
                         for row in rows:
                             cols = row.findAll("td")
                             match_info = cols[0].find("a", attrs={ "class" : "match" } )
+                            link = match_info['href']
                             id = match_info['href'].split("/")[-1].split("-")[0]
                             opponent1 = match_info.find("span", attrs={ "class" : "opp1" } ).text.strip()
                             bet1 = match_info.find("span", attrs={ "class" : "bet1" } ).text.strip()
@@ -241,7 +261,7 @@ class GameStatsPlugin(BasePlugin):
                             bet2 = match_info.find("span", attrs={ "class" : "bet2" } ).text.strip()
 
                             # Add game to list
-                            game = Game(id, header, opponent1, opponent2, bet1, bet2)
+                            game = Game(id, header, link, opponent1, opponent2, bet1, bet2)
 
                             if header == "Upcoming":
                                 timeCol = cols[1].find("span", attrs={ "class" : "live-in" } )
