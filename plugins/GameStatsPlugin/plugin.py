@@ -32,11 +32,43 @@ class GameStatsPlugin(BasePlugin):
                 self.sendMessage(self.className, channel, "Please visit http://www.gosugamers.net%s for more match information." % matchLink)
 
     def getLinkFromID(self, id):
-        games = [x for x in self.csgoLiveList if x.id == id]
-        for game in games:
-            return game.link
+
+        games = [x for x in self.getCSLists() if x.id == id]
+        if not len(games) == 0:
+            return games[0].link
+
+        games = [x for x in self.getDotaLists() if x.id == id]
+        if not len(games) == 0:
+            return games[0].link
+
+        games = [x for x in self.getHearthLists() if x.id == id]
+        if not len(games) == 0:
+            return games[0].link
+
+        games = [x for x in self.getLOLLists() if x.id == id]
+        if not len(games) == 0:
+            return games[0].link
+
+        games = [x for x in self.getHotsLists() if x.id == id]
+        if not len(games) == 0:
+            return games[0].link
 
         return None
+
+    def getCSLists(self):
+        return self.csgoLiveList + self.csgoUpcomingList + self.csgoRecentList
+
+    def getLOLLists(self):
+        return self.lolLiveList + self.lolUpcomingList + self.lolRecentList
+
+    def getDotaLists(self):
+        return self.dotaLiveList + self.dotaUpcomingList + self.dotaRecentList
+
+    def getHearthLists(self):
+        return self.hearthLiveList + self.hearthUpcomingList + self.hearthRecentList
+
+    def getHotsLists(self):
+        return self.hotsLiveList + self.hotsUpcomingList + self.hotsRecentList
 
 
     def liveListHandler(self, username, channel, args):
