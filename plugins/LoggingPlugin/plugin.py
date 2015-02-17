@@ -1,6 +1,7 @@
 from plugins.BasePlugin import BasePlugin
 from plugins.LoggingPlugin.LoggingQueryHelper import LoggingQueryHelper
 import datetime
+import threading
 
 class LoggingPlugin(BasePlugin):
     def __init__(self, twitchBot):
@@ -11,6 +12,13 @@ class LoggingPlugin(BasePlugin):
         self.registerAll(self.className, self.messageHandler)
         self.registerJoinPartNotifications(self.className, self.joinPartHandler)
         self.registerCommand(self.className, "stats", self.myStatsHandler)
+
+        self.updateTimeSpent()
+
+    def updateTimeSpent(self):
+        print("Updating time spent")
+        threading.Timer(10 * 60, self.updateTimeSpent).start()
+        self.loggingQueryHelper.popAllTimeSpent()
 
     def messageHandler(self, username, channel, args):
         self.loggingQueryHelper.insertMsg(username, channel, " ".join(args))

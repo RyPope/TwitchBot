@@ -124,6 +124,30 @@ class LoggingQueryHelper():
             db.close()
             return joinTime
 
+    def popAllTimeSpent(self):
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("""SELECT * FROM `joins`""")
+                joins = cur.fetchall()
+
+                if not joins is None:
+                    for row in joins:
+                        diff = datetime.datetime.now() - row[2]
+                        timeSpent = divmod(diff.days * 86400 + diff.seconds, 60)
+                        username = self.queryHelper.getUsername(row[0])
+                        channel = self.queryHelper.getChannel(row[1])
+
+                        self.updateTimeSpent(username, channel, timeSpent[0])
+
+                        self.insertJoined(username, channel, datetime.datetime.now())
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
     def updateTimeSpent(self, username, channel, time):
         try:
             db = self.sqlHelper.getConnection()

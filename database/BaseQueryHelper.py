@@ -218,6 +218,24 @@ class BaseQueryHelper():
             db.close()
             return username
 
+    def getChannel(self, channel_id):
+        channel = ""
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("""SELECT channel FROM channels WHERE channel_id = %s""", (channel_id,))
+
+                result = cur.fetchone()
+                if not result is None:
+                    channel = str(result[0])
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return channel
+
     def setSetting(self, channel, key, value):
         try:
             db = self.sqlHelper.getConnection()
