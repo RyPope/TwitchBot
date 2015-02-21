@@ -34,6 +34,7 @@ class LoggingQueryHelper():
                             "(`user_id` int NOT NULL,"
                             "`channel_id` int NOT NULL,"
                             "`time_spent` int NOT NULL DEFAULT 0,"
+                            "`points` int NOT NULL DEFAULT 0,"
                             "PRIMARY KEY (`user_id`, `channel_id`))")
                 db.commit()
 
@@ -156,7 +157,7 @@ class LoggingQueryHelper():
                 user_id = self.queryHelper.getUserID(username)
 
                 cur.execute("""INSERT INTO `time_spent` (`channel_id`, `user_id`) VALUES (%s, %s) ON DUPLICATE KEY
-                UPDATE `time_spent` = `time_spent` + %s""", (channel_id, user_id, time))
+                UPDATE `time_spent` = `time_spent` + %s, `points` = `points` + %s""", (channel_id, user_id, time, time))
                 db.commit()
 
         except Exception as e:
@@ -174,7 +175,7 @@ class LoggingQueryHelper():
                 channel_id = self.queryHelper.getChannelID(channel)
                 user_id = self.queryHelper.getUserID(username)
 
-                cur.execute("""SELECT `time_spent` FROM `time_spent` WHERE `channel_id` = %s AND `user_id` = %s""", (channel_id, user_id))
+                cur.execute("""SELECT `points` FROM `time_spent` WHERE `channel_id` = %s AND `user_id` = %s""", (channel_id, user_id))
 
                 result = cur.fetchone()
                 if not result is None:

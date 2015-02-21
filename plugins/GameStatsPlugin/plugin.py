@@ -18,40 +18,72 @@ class GameStatsPlugin(BasePlugin):
         self.registerCommand(self.className, "upcoming", self.upcomingListHandler)
         self.registerCommand(self.className, "recent", self.recentListHandler)
         self.registerCommand(self.className, "info", self.infoHandler)
+        self.registerCommand(self.className, "bet", self.betHandler)
+        self.registerCommand(self.className, "points", self.pointHandler)
 
         self.updateMatches()
+
+    def __del__(self):
+        print("Terminating plugin")
+
+    def pointHandler(self, username, channel, args):
+        self.sendMessage(self.className, channel, "You currently have %s points." % self.queryHelper.getPoints(username, channel))
+
+    def betHandler(self, username, channel, args):
+        if len(args) < 4:
+            self.sendMessage(self.className, channel, "Invalid syntax, please use bet <match id> <team A | B> <amount>")
+        else:
+            match = self.getGameFromID(args[1])
+            points = self.queryHelper.getPoints(username, channel)
+            teamBet = str(args[2])
+            if match is None:
+                self.sendMessage(self.className, channel, "Invalid match ID")
+            elif points is None:
+                self.sendMessage(self.className, channel, "Could not retrieve points.")
+            elif not args[3].isdigit():
+                self.sendMessage(self.className, channel, "Bet must be integer value.")
+            elif not (teamBet.lower() == "b" or teamBet.lower() == "a"):
+                self.sendMessage(self.className, channel, "Please place bet on either team A or team B.")
+            elif int(points) < int(args[3]):
+                self.sendMessage(self.className, channel, "You cannot bet more points than you have.")
+            else:
+                self.sendMessage(self.className, channel, "You have placed a bet %s point bet on match %s for %s to win at a return of %s" %
+                (args[3],
+                match.id,
+                match.opp1 if teamBet.lower() == "a" else match.opp2,
+                match.bet1 if teamBet.lower() == "a" else match.bet2))
 
     def infoHandler(self, username, channel, args):
         if len(args) < 2:
             self.sendMessage(self.className, channel, "Invalid syntax, please use info <game id>")
         else:
-            matchLink = self.getLinkFromID(args[1])
-            if matchLink is None:
+            match = self.getGameFromID(args[1])
+            if match is None:
                 self.sendMessage(self.className, channel, "Invalid match ID")
             else:
-                self.sendMessage(self.className, channel, "Please visit http://www.gosugamers.net%s for more match information." % matchLink)
+                self.sendMessage(self.className, channel, "Please visit http://www.gosugamers.net%s for more match information." % match.link)
 
-    def getLinkFromID(self, id):
+    def getGameFromID(self, id):
 
         games = [x for x in self.getCSLists() if x.id == id]
         if not len(games) == 0:
-            return games[0].link
+            return games[0]
 
         games = [x for x in self.getDotaLists() if x.id == id]
         if not len(games) == 0:
-            return games[0].link
+            return games[0]
 
         games = [x for x in self.getHearthLists() if x.id == id]
         if not len(games) == 0:
-            return games[0].link
+            return games[0]
 
         games = [x for x in self.getLOLLists() if x.id == id]
         if not len(games) == 0:
-            return games[0].link
+            return games[0]
 
         games = [x for x in self.getHotsLists() if x.id == id]
         if not len(games) == 0:
-            return games[0].link
+            return games[0]
 
         return None
 

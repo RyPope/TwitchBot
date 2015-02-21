@@ -12,7 +12,7 @@ from plugins.BasePlugin import BasePlugin
 from util.BaseSettings import Settings
 from database.BaseQueryHelper import BaseQueryHelper
 from signal import *
-import sys
+
 
 class TwitchBot:
     def __init__(self):
@@ -118,7 +118,7 @@ class TwitchBot:
                 if not self.queryHelper.checkPluginDisabled(chan, handler['plugin']):
                     handler['handler'](nick, chan, False)
 
-        # # User oped in channel
+        # User oped in channel
         elif ircMessage.find('MODE ') != -1:
             nick = ircMessage.split(' ')[-1]
             chan = ircMessage.split(' ')[2]
@@ -151,6 +151,7 @@ class TwitchBot:
                     Thread(target=self.handleIRCMessage, args=(msg,)).start()
             except Exception as e:
                 print(traceback.format_exc())
+                raise e
 
     def loadPlugins(self):
         potentialPlugins = []
