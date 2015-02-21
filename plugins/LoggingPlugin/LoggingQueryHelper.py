@@ -24,12 +24,6 @@ class LoggingQueryHelper():
                     "`timestamp` datetime DEFAULT CURRENT_TIMESTAMP,"
                     "PRIMARY KEY (`message_id`))")
 
-                cur.execute("CREATE TABLE IF NOT EXISTS `joins` "
-                            "(`user_id` int NOT NULL,"
-                            "`channel_id` int NOT NULL,"
-                            "`joined` datetime NOT NULL,"
-                            "PRIMARY KEY (`user_id`, `channel_id`))")
-
                 cur.execute("CREATE TABLE IF NOT EXISTS `time_spent`"
                             "(`user_id` int NOT NULL,"
                             "`channel_id` int NOT NULL,"
@@ -84,71 +78,6 @@ class LoggingQueryHelper():
             db.close()
             return messages
 
-    def insertJoined(self, username, channel, time):
-        try:
-            db = self.sqlHelper.getConnection()
-            with closing(db.cursor()) as cur:
-                channel_id = self.queryHelper.getChannelID(channel)
-                user_id = self.queryHelper.getUserID(username)
-
-                cur.execute("""INSERT INTO `joins` (`channel_id`, `user_id`, `joined`) VALUES(%s, %s, %s)
-                ON DUPLICATE KEY UPDATE `joined` = %s""", (channel_id, user_id, time, time))
-                db.commit()
-
-        except Exception as e:
-            print("Error inserting new join")
-            print(traceback.format_exc())
-        finally:
-            db.close()
-
-    def popJoined(self, username, channel):
-        joinTime = datetime.datetime.now()
-        try:
-            db = self.sqlHelper.getConnection()
-
-            with closing(db.cursor()) as cur:
-                channel_id = self.queryHelper.getChannelID(channel)
-                user_id = self.queryHelper.getUserID(username)
-
-                cur.execute("""SELECT joined FROM `joins` WHERE `channel_id` = %s AND `user_id` = %s""", (channel_id, user_id))
-                joined = cur.fetchone()
-
-                if not joined is None:
-                    joinTime = joined[0]
-
-                cur.execute("""DELETE FROM joins WHERE user_id = %s AND channel_id = %s""", (user_id, channel_id))
-                db.commit()
-
-        except Exception as e:
-            print(traceback.format_exc())
-        finally:
-            db.close()
-            return joinTime
-
-    def popAllTimeSpent(self):
-        try:
-            db = self.sqlHelper.getConnection()
-
-            with closing(db.cursor()) as cur:
-                cur.execute("""SELECT * FROM `joins`""")
-                joins = cur.fetchall()
-
-                if not joins is None:
-                    for row in joins:
-                        diff = datetime.datetime.now() - row[2]
-                        timeSpent = divmod(diff.days * 86400 + diff.seconds, 60)
-                        username = self.queryHelper.getUsername(row[0])
-                        channel = self.queryHelper.getChannel(row[1])
-
-                        self.updateTimeSpent(username, channel, timeSpent[0])
-
-                        self.insertJoined(username, channel, datetime.datetime.now())
-
-        except Exception as e:
-            print(traceback.format_exc())
-        finally:
-            db.close()
-
     def updateTimeSpent(self, username, channel, time):
         try:
             db = self.sqlHelper.getConnection()
@@ -158,6 +87,7 @@ class LoggingQueryHelper():
 
                 cur.execute("""INSERT INTO `time_spent` (`channel_id`, `user_id`) VALUES (%s, %s) ON DUPLICATE KEY
                 UPDATE `time_spent` = `time_spent` + %s, `points` = `points` + %s""", (channel_id, user_id, time, time))
+
                 db.commit()
 
         except Exception as e:

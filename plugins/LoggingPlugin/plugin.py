@@ -1,6 +1,7 @@
 from plugins.BasePlugin import BasePlugin
 from plugins.LoggingPlugin.LoggingQueryHelper import LoggingQueryHelper
 import datetime
+from collections import defaultdict
 import threading
 
 class LoggingPlugin(BasePlugin):
@@ -9,6 +10,9 @@ class LoggingPlugin(BasePlugin):
         self.className = self.__class__.__name__
         self.loggingQueryHelper = LoggingQueryHelper()
 
+        self.currentUsers = defaultdict(list)
+        self.toUpdate = defaultdict(list)
+
         self.registerAll(self.className, self.messageHandler)
         self.registerJoinPartNotifications(self.className, self.joinPartHandler)
         self.registerCommand(self.className, "stats", self.myStatsHandler)
@@ -16,9 +20,13 @@ class LoggingPlugin(BasePlugin):
         self.updateTimeSpent()
 
     def updateTimeSpent(self):
-        print("Updating time spent")
-        threading.Timer(10 * 60, self.updateTimeSpent).start()
-        self.loggingQueryHelper.popAllTimeSpent()
+        threading.Timer(60, self.updateTimeSpent).start()
+
+        for channel, values in self.toUpdate.items():
+            for username in values:
+                self.loggingQueryHelper.updateTimeSpent(username, channel, 1)
+
+        self.toUpdate = self.currentUsers
 
     def messageHandler(self, username, channel, args):
         self.loggingQueryHelper.insertMsg(username, channel, " ".join(args))
@@ -27,13 +35,10 @@ class LoggingPlugin(BasePlugin):
         self.loggingQueryHelper.insertUser(username)
 
         if isJoin:
-            self.loggingQueryHelper.insertJoined(username, channel, datetime.datetime.now())
+            self.currentUsers[channel].append(username)
         else:
-            joinTime = self.loggingQueryHelper.popJoined(username, channel)
-            diff = datetime.datetime.now() - joinTime
-            timeSpent = divmod(diff.days * 86400 + diff.seconds, 60)
-            self.loggingQueryHelper.updateTimeSpent(username, channel, timeSpent[0])
-            print(self.className, channel, "%s spent %d minutes, %d seconds in %s" % (username, timeSpent[0], timeSpent[1], channel))
+            self.currentUsers[channel].remove(username)
+
 
     def myStatsHandler(self, username, channel, args):
         chatMessages = self.loggingQueryHelper.getMessages(username, channel)
