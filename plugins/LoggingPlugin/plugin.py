@@ -37,7 +37,8 @@ class LoggingPlugin(BasePlugin):
         if isJoin:
             self.currentUsers[channel].append(username)
         else:
-            self.currentUsers[channel].remove(username)
+            if username in self.currentUsers[channel]:
+                self.currentUsers[channel].remove(username)
 
 
     def myStatsHandler(self, username, channel, args):

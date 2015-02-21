@@ -35,23 +35,39 @@ class GameStatsPlugin(BasePlugin):
         else:
             match = self.getGameFromID(args[1])
             points = self.queryHelper.getPoints(username, channel)
-            teamBet = str(args[2])
+            teamBet = self.parseTeamBet(match, " ".join(args[3:]))
+            bet = args[2]
+
             if match is None:
                 self.sendMessage(self.className, channel, "Invalid match ID")
             elif points is None:
                 self.sendMessage(self.className, channel, "Could not retrieve points.")
-            elif not args[3].isdigit():
+            elif not bet.isdigit():
                 self.sendMessage(self.className, channel, "Bet must be integer value.")
-            elif not (teamBet.lower() == "b" or teamBet.lower() == "a"):
-                self.sendMessage(self.className, channel, "Please place bet on either team A or team B.")
-            elif int(points) < int(args[3]):
+            elif teamBet is None:
+                self.sendMessage(self.className, channel, "Could not find team name for that match.")
+            elif int(points) < int(bet):
                 self.sendMessage(self.className, channel, "You cannot bet more points than you have.")
             else:
-                self.sendMessage(self.className, channel, "You have placed a bet %s point bet on match %s for %s to win at a return of %s" %
-                (args[3],
+                self.sendMessage(self.className, channel, "You have placed a %s point bet on match %s for %s to win at a return of %s" %
+                (bet,
                 match.id,
-                match.opp1 if teamBet.lower() == "a" else match.opp2,
-                match.bet1 if teamBet.lower() == "a" else match.bet2))
+                match.opp1 if teamBet == 1 else match.opp2,
+                match.bet1 if teamBet == 1 else match.bet2))
+
+    def parseTeamBet(self, match, teamName):
+        opponent1 = str(match.opp1.lower())
+        opponent2 = str(match.opp2.lower())
+        teamName = str(teamName.lower())
+
+        if teamName in opponent1:
+            return 1
+        elif teamName in opponent2:
+            return 2
+
+        return None
+
+
 
     def infoHandler(self, username, channel, args):
         if len(args) < 2:
