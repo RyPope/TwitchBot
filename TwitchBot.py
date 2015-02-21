@@ -83,7 +83,7 @@ class TwitchBot:
             msg = ircMessage.split(' PRIVMSG ' + chan + ' :')[1]
 
             for pluginDict in self.commands:
-                if re.search('^' + Settings.irc_trigger + pluginDict['regex'], msg, re.IGNORECASE) \
+                if re.search('^' + Settings.irc_trigger + pluginDict['regex'] + '\\b', msg, re.IGNORECASE) \
                         and not self.queryHelper.checkPluginDisabled(chan, pluginDict['plugin']):
                     handler = pluginDict['handler']
                     args = msg.split(" ")

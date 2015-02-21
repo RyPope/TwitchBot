@@ -20,6 +20,7 @@ class GameStatsPlugin(BasePlugin):
         self.registerCommand(self.className, "info", self.infoHandler)
         self.registerCommand(self.className, "bet", self.betHandler)
         self.registerCommand(self.className, "points", self.pointHandler)
+        self.registerCommand(self.className, 'bets', self.betsHandler)
 
         self.updateMatches()
 
@@ -29,9 +30,25 @@ class GameStatsPlugin(BasePlugin):
     def pointHandler(self, username, channel, args):
         self.sendMessage(self.className, channel, "You currently have %s points." % self.queryHelper.getPoints(username, channel))
 
+    def betsHandler(self, username, channel, args):
+        if len(args) < 2:
+            self.sendMessage(self.className, channel, "Invalid syntax, please use bets <active | complete>")
+        elif not (args[1].lower() == 'active' or args[1].lower() == 'complete'):
+            self.sendMessage(self.className, channel, "Invalid syntax, please use bets <active | complete>")
+        else:
+            status = args[1].lower()
+            bets = self.queryHelper.getBets(username, channel, status)
+
+            if len(bets) == 0:
+                self.sendMessage(self.className, channel, "No %s bets found." % status)
+            for bet in bets:
+                self.sendMessage(self.className, channel, "ID: %s"
+                                 % (bet.match_id,))
+                time.sleep(.5)
+
     def betHandler(self, username, channel, args):
         if len(args) < 4:
-            self.sendMessage(self.className, channel, "Invalid syntax, please use bet <match id> <team A | B> <amount>")
+            self.sendMessage(self.className, channel, "Invalid syntax, please use bet <match id> <amount> <team name>")
         else:
             match = self.getGameFromID(args[1])
             points = self.queryHelper.getPoints(username, channel)
@@ -48,12 +65,14 @@ class GameStatsPlugin(BasePlugin):
                 self.sendMessage(self.className, channel, "Could not find team name for that match.")
             elif int(points) < int(bet):
                 self.sendMessage(self.className, channel, "You cannot bet more points than you have.")
+            elif not match.type == 'Upcoming':
+                self.sendMessage(self.className, channel, "You can only bet on upcoming matches.")
             else:
-                self.sendMessage(self.className, channel, "You have placed a %s point bet on match %s for %s to win at a return of %s" %
-                (bet,
-                match.id,
-                match.opp1 if teamBet == 1 else match.opp2,
-                match.bet1 if teamBet == 1 else match.bet2))
+                self.sendMessage(self.className, channel, "You have placed a %s point bet on match %s for %s to win for a return of %s"
+                % (bet, match.id, match.opp1 if teamBet == 1 else match.opp2,
+                   self.parseReturn(int(bet), str(match.bet1 if teamBet == 1 else match.bet2))))
+
+                self.queryHelper.insertBet(bet, teamBet, match, username, channel)
 
     def parseTeamBet(self, match, teamName):
         opponent1 = str(match.opp1.lower())
@@ -67,7 +86,9 @@ class GameStatsPlugin(BasePlugin):
 
         return None
 
-
+    def parseReturn(self, base, perStr):
+        dec = float(''.join(c for c in perStr if c not in '()%'))/100
+        return base * dec
 
     def infoHandler(self, username, channel, args):
         if len(args) < 2:
@@ -350,6 +371,7 @@ class GameStatsPlugin(BasePlugin):
                             elif header == "Recent":
                                 winnerScore = cols[1].find("span", attrs={ "class" : "hidden" } ).text.strip()
                                 game.setScore(winnerScore)
+                                self.queryHelper.insertComplete(game)
 
                             if gameType == "csgo":
                                 if header == "Live":

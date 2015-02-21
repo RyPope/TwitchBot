@@ -28,7 +28,7 @@ class LoggingQueryHelper():
                             "(`user_id` int NOT NULL,"
                             "`channel_id` int NOT NULL,"
                             "`time_spent` int NOT NULL DEFAULT 0,"
-                            "`points` int NOT NULL DEFAULT 0,"
+                            "`points` double NOT NULL DEFAULT 0,"
                             "PRIMARY KEY (`user_id`, `channel_id`))")
                 db.commit()
 
@@ -92,6 +92,24 @@ class LoggingQueryHelper():
 
         except Exception as e:
             print("Error inserting new time spent")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
+    def deductPoints(self, username, channel, points):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+                user_id = self.queryHelper.getUserID(username)
+
+                cur.execute("""INSERT INTO `time_spent` (`channel_id`, `user_id`) VALUES (%s, %s) ON DUPLICATE KEY
+                UPDATE `points` = `points` - %s""", (channel_id, user_id, points))
+
+                db.commit()
+
+        except Exception as e:
+            print("Error deducting points")
             print(traceback.format_exc())
         finally:
             db.close()

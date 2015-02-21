@@ -1,6 +1,5 @@
 from plugins.BasePlugin import BasePlugin
 from plugins.LoggingPlugin.LoggingQueryHelper import LoggingQueryHelper
-import datetime
 from collections import defaultdict
 import threading
 
