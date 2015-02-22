@@ -46,7 +46,7 @@ class GameStatsPlugin(BasePlugin):
                 for bet in bets[:5]:
                     game = self.getGameFromID(bet.match_id)
                     self.sendMessage(self.className, channel, "You bet %s points for %s on match %s - %s %s vs %s %s"
-                    % (game.opp1 if int(bet.betFor) == 1 else game.opp2, bet.betAmount, bet.match_id, game.opp1, game.bet1, game.opp2, game.bet2))
+                    % (bet.betAmount, game.opp1 if int(bet.betFor) == 1 else bet.opp2, bet.match_id, game.opp1, game.bet1, game.opp2, game.bet2))
                     time.sleep(.5)
             else:
                 for bet in bets[:5]:
@@ -126,19 +126,19 @@ class GameStatsPlugin(BasePlugin):
 
     def getGameFromID(self, id):
 
-        games = [x for x in self.getCSLists() if int(x.id) == id]
+        games = [x for x in self.getCSLists() if int(x.id) == int(id)]
         if not len(games) == 0:
             return games[0]
 
-        games = [x for x in self.getDotaLists() if int(x.id) == id]
+        games = [x for x in self.getDotaLists() if int(x.id) == int(id)]
         if not len(games) == 0:
             return games[0]
 
-        games = [x for x in self.getHearthLists() if int(x.id) == id]
+        games = [x for x in self.getHearthLists() if int(x.id) == int(id)]
         if not len(games) == 0:
             return games[0]
 
-        games = [x for x in self.getLOLLists() if int(x.id) == id]
+        games = [x for x in self.getLOLLists() if int(x.id) == int(id)]
         if not len(games) == 0:
             return games[0]
 
