@@ -114,6 +114,24 @@ class LoggingQueryHelper():
         finally:
             db.close()
 
+    def increasePoints(self, username, channel, points):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+                user_id = self.queryHelper.getUserID(username)
+
+                cur.execute("""INSERT INTO `time_spent` (`channel_id`, `user_id`) VALUES (%s, %s) ON DUPLICATE KEY
+                UPDATE `points` = `points` + %s""", (channel_id, user_id, points))
+
+                db.commit()
+
+        except Exception as e:
+            print("Error awarding points")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
     def getPoints(self, username, channel):
         value = None
         try:

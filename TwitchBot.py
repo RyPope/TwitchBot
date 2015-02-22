@@ -74,7 +74,7 @@ class TwitchBot:
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
-        print("IRC: " + ircMessage)
+        # print("IRC: " + ircMessage)
         nick = ircMessage.split('!')[0][1:]
 
         # Message to a channel

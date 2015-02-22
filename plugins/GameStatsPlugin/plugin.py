@@ -23,6 +23,7 @@ class GameStatsPlugin(BasePlugin):
         self.registerCommand(self.className, 'bets', self.betsHandler)
 
         self.updateMatches()
+        self.checkBets()
 
     def __del__(self):
         print("Terminating plugin")
@@ -297,6 +298,27 @@ class GameStatsPlugin(BasePlugin):
         self.hotsLiveList = []
         self.hotsRecentList = []
 
+    def checkBets(self):
+        threading.Timer(120, self.checkBets).start()
+        bets = self.queryHelper.getAllActiveBets()
+
+        for bet in bets:
+            game = self.queryHelper.getCompletedGame(bet.match_id)
+            if not game is None:
+                self.queryHelper.setComplete(bet.id)
+
+                scores = game.score.split(" - ")
+                winner = -1
+
+                if int(scores[0]) < int(scores[1]):
+                    winner = 2
+                else:
+                    winner = 1
+
+                if int(winner) == int(bet.betFor):
+                    self.queryHelper.increasePoints(bet.user_id, bet.channel_id, bet.betAmount + self.parseReturn(bet.betAmount, game.bet1 if bet.betFor == 1 else game.bet2))
+
+
     def updateMatches(self):
         threading.Timer(120, self.updateMatches).start()
         gamesToUpdate = ["csgo", "lol", "dota2", "hearth", "hots"]
@@ -362,7 +384,7 @@ class GameStatsPlugin(BasePlugin):
                             bet2 = match_info.find("span", attrs={ "class" : "bet2" } ).text.strip()
 
                             # Add game to list
-                            game = Game(id, header, link, opponent1, opponent2, bet1, bet2)
+                            game = Game(gameType, id, header, link, opponent1, opponent2, bet1, bet2)
 
                             if header == "Upcoming":
                                 timeCol = cols[1].find("span", attrs={ "class" : "live-in" } )

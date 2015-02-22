@@ -2,7 +2,7 @@ __author__ = 'Ryan'
 
 class Bet():
     def __init__(self, bet_row):
-        self.match_id = int(bet_row[0])
+        self.id = int(bet_row[0])
         self.channel_id = int(bet_row[1])
         self.user_id = int(bet_row[2])
         self.status = bet_row[3]
