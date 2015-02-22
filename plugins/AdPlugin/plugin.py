@@ -10,8 +10,8 @@ class AdPlugin(BasePlugin):
         self.queryHelper = AdQueryHelper()
 
         self.registerCommand(self.className, "setad", self.setAdHandler)
-        self.registerCommand(self.className, "startads", self.startAdHandler)
-        self.registerCommand(self.className, "pauseads", self.pauseAdHandler)
+        self.registerCommand(self.className, "startad", self.startAdHandler)
+        self.registerCommand(self.className, "pausead", self.pauseAdHandler)
 
         threading.Timer(10, self.startTimer).start()
 
@@ -43,7 +43,7 @@ class AdPlugin(BasePlugin):
 
     def setAdHandler(self, username, channel, args):
         if len(args) < 3:
-            self.sendMessage(self.className, channel, "Invalid syntax, please use startad <interval> <message>")
+            self.sendMessage(self.className, channel, "Invalid syntax, please use setad <interval> <message>")
         elif (not args[1].isdigit()) or (not int(args[1]) % 5 == 0):
             self.sendMessage(self.className, channel, "Interval must be integer of 5 minute increment.")
         elif not (self.queryHelper.isMod(username, channel or self.queryHelper.isAdmin(username))):
