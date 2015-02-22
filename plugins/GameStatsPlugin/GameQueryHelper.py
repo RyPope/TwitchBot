@@ -139,6 +139,7 @@ class GameQueryHelper():
             db.close()
             return game
 
+
     def setComplete(self, betID):
         try:
             db = self.sqlHelper.getConnection()

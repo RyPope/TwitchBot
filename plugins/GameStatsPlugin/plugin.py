@@ -42,10 +42,33 @@ class GameStatsPlugin(BasePlugin):
 
             if len(bets) == 0:
                 self.sendMessage(self.className, channel, "No %s bets found." % status)
-            for bet in bets:
-                self.sendMessage(self.className, channel, "ID: %s"
-                                 % (bet.match_id,))
-                time.sleep(.5)
+            if status == 'active':
+                for bet in bets[:5]:
+                    game = self.getGameFromID(bet.match_id)
+                    self.sendMessage(self.className, channel, "You bet %s points for %s on match %s - %s %s vs %s %s"
+                    % (game.opp1 if int(bet.betFor) == 1 else game.opp2, bet.betAmount, bet.match_id, game.opp1, game.bet1, game.opp2, game.bet2))
+                    time.sleep(.5)
+            else:
+                for bet in bets[:5]:
+                    game = self.queryHelper.getCompletedGame(bet.match_id)
+                    if not game is None:
+                        scores = game.score.split(" - ")
+                        winner = -1
+                        outcome = ""
+                        if int(scores[0]) < int(scores[1]):
+                            winner = 2
+                        else:
+                            winner = 1
+
+                        if int(winner) == int(bet.betFor):
+                            outcome = "Won"
+                        else:
+                            outcome = "Lost"
+
+                        self.sendMessage(self.className, channel, "%s %s points on match %s, %s %s vs %s %s"
+                                         % (outcome, self.parseReturn(int(bet.betAmount), str(game.bet1 if bet.betFor == 1 else game.bet2)),
+                                            bet.match_id, game.opp1, game.bet1, game.opp2, game.bet2))
+                        time.sleep(.5)
 
     def betHandler(self, username, channel, args):
         if len(args) < 4:
@@ -103,23 +126,23 @@ class GameStatsPlugin(BasePlugin):
 
     def getGameFromID(self, id):
 
-        games = [x for x in self.getCSLists() if x.id == id]
+        games = [x for x in self.getCSLists() if int(x.id) == id]
         if not len(games) == 0:
             return games[0]
 
-        games = [x for x in self.getDotaLists() if x.id == id]
+        games = [x for x in self.getDotaLists() if int(x.id) == id]
         if not len(games) == 0:
             return games[0]
 
-        games = [x for x in self.getHearthLists() if x.id == id]
+        games = [x for x in self.getHearthLists() if int(x.id) == id]
         if not len(games) == 0:
             return games[0]
 
-        games = [x for x in self.getLOLLists() if x.id == id]
+        games = [x for x in self.getLOLLists() if int(x.id) == id]
         if not len(games) == 0:
             return games[0]
 
-        games = [x for x in self.getHotsLists() if x.id == id]
+        games = [x for x in self.getHotsLists() if int(x.id) == id]
         if not len(games) == 0:
             return games[0]
 
