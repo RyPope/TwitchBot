@@ -14,11 +14,6 @@ class GiveawayPlugin(BasePlugin):
         self.currentSingleGiveaways = defaultdict(list)
         self.currentPointsGiveaways = defaultdict(list)
 
-        # giveaway <type (single, all, points)>
-        #   giveaway type points <optional: minimum>
-        # endgiveaway
-        # enter <optional: points>
-
         self.registerCommand(self.className, "giveaway", self.giveawayHandler)
         self.registerCommand(self.className, "enter", self.enterGiveaway)
         self.registerCommand(self.className, "endgiveaway", self.endGiveaway)

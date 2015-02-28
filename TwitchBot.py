@@ -31,6 +31,7 @@ class TwitchBot:
         self.joinPartHandlers = []
         self.loadedPluginNames = []
         self.moddedInList = ['#popethethird']
+        self.ignoredPlugins = ['SpamPlugin']
 
         self.queryHelper = BaseQueryHelper()
 
@@ -74,7 +75,7 @@ class TwitchBot:
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
-        # print("IRC: " + ircMessage)
+        print("IRC: " + ircMessage)
         nick = ircMessage.split('!')[0][1:]
 
         # Message to a channel
@@ -169,7 +170,7 @@ class TwitchBot:
                 plugin = imp.load_module(self._mainModule, *i["info"])
                 pluginClasses = inspect.getmembers(plugin, inspect.isclass)
                 for className, classObj in pluginClasses:
-                    if className == "BasePlugin" or className in self.loadedPluginNames or not issubclass(classObj, BasePlugin):
+                    if className == "BasePlugin" or className in self.loadedPluginNames or not issubclass(classObj, BasePlugin) or className in self.ignoredPlugins:
                         continue
                     print(className)
                     pluginInstance = classObj(self)
