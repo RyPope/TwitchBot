@@ -12,9 +12,6 @@ class Trivia:
         self.hint_num = 0
         self.hint = self.getHint()
 
-    def getHintNum(self):
-        return self.hint_num
-
     def getHint(self):
         if self.hint_num == 0:
             self.hint = re.sub('[0-9a-zA-Z]', '*', self.answer)
@@ -31,5 +28,4 @@ class Trivia:
 
                     self.hint = "".join(temp)
 
-        self.hint_num += 1
         return self.hint

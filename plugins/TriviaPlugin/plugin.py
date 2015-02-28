@@ -2,7 +2,9 @@ from plugins.BasePlugin import BasePlugin
 from plugins.TriviaPlugin.TriviaQueryHelper import TriviaQueryHelper
 import re
 import threading
+from collections import defaultdict
 from objects.trivia import Trivia
+import time
 
 class TriviaPlugin(BasePlugin):
     def __init__(self, twitchBot):
@@ -14,19 +16,43 @@ class TriviaPlugin(BasePlugin):
         self.registerCommand(self.className, "suggest", self.suggestHandler)
         self.registerCommand(self.className, "add", self.addHandler)
         self.registerCommand(self.className, "trivia", self.triviaHandler)
+        self.registerCommand(self.className, "hint", self.hintHandler)
+        self.registerAll(self.className, self.answerHandler)
 
         self.triviaRunning = []
+        self.triviaDict = defaultdict(Trivia)
 
-    def triviaLoop(self, channel, question):
+    def answerHandler(self, username, channel, args):
         if channel in self.triviaRunning:
+            answer = " ".join(args).lower().strip()
+            if answer == self.triviaDict[channel].answer:
+                question = self.triviaDict[channel]
+                self.sendMessage(self.className, channel, "%s has answered correctly and been rewarded %s points" % (username, question.value))
+                self.triviaDict[channel] = self.queryHelper.getRandomQuestion()
 
-            if question.getHintNum() > 3:
+    def hintHandler(self, username, channel, args):
+        if channel in self.triviaRunning:
+            trivia = self.triviaDict[channel]
+            self.sendMessage(self.className, channel, "Question: %s - Hint %s: %s" % (trivia.question, trivia.hint_num, trivia.hint))
+        else:
+            self.sendMessage(self.className, channel, "Trivia is not currently running, type !trivia start to run.")
+
+    def triviaLoop(self, channel):
+        if channel in self.triviaRunning:
+            question = self.triviaDict[channel]
+            if question.hint_num > 3:
                 self.sendMessage(self.className, channel, "No one got the answer! It was %s" % question.answer)
                 question = self.queryHelper.getRandomQuestion()
             else:
-                self.sendMessage(self.className, channel, "Hint %s: %s" % (question.getHintNum(), question.getHint()))
+                if question.hint_num == 0:
+                    self.sendMessage(self.className, channel, "Question (%s points): %s" % (self.triviaDict[channel].value, self.triviaDict[channel].question))
+                time.sleep(.5)
 
-            threading.Timer(15, self.triviaLoop, args=(channel, question)).start()
+                self.sendMessage(self.className, channel, "Hint %s: %s" % (question.hint_num, question.getHint()))
+                question.hint_num += 1
+
+            self.triviaDict[channel] = question
+            threading.Timer(15, self.triviaLoop, args=(channel,)).start()
 
     def triviaHandler(self, username, channel, args):
         if not self.queryHelper.isMod(username, channel) or not self.queryHelper.isAdmin(username):
@@ -34,15 +60,15 @@ class TriviaPlugin(BasePlugin):
         else:
             if args[1].lower() == "start":
                 if not channel in self.triviaRunning:
-                    self.sendMessage(self.className, channel, "Trivia started.")
                     self.triviaRunning.append(channel)
                     trivia = self.queryHelper.getRandomQuestion()
-                    self.triviaLoop(channel, trivia)
-                    print(channel, self.triviaRunning)
+                    self.triviaDict[channel] = trivia
+                    self.triviaLoop(channel)
+
             elif args[1].lower() == "stop":
                 if channel in self.triviaRunning:
                     self.triviaRunning.remove(channel)
-                    self.sendMessage(self.className, channel, "Trivia ended.")
+                    self.sendMessage(self.className, channel, "Trivia ended. The answer for \"%s\" was \"%s\"" % (self.triviaDict[channel].question, self.triviaDict[channel].answer))
 
 
     def suggestHandler(self, username, channel, args):
