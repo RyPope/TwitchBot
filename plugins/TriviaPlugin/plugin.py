@@ -18,13 +18,14 @@ class TriviaPlugin(BasePlugin):
         self.triviaRunning = []
 
     def triviaLoop(self, channel, question):
-        if question.getHintNum() > 3:
-            self.sendMessage(self.className, channel, "No one got the answer! It was %s" % question.answer)
-            question = self.queryHelper.getRandomQuestion()
-        else:
-            self.sendMessage(self.className, channel, "Hint %s: %s" % (question.getHintNum(), question.getHint()))
-
         if channel in self.triviaRunning:
+
+            if question.getHintNum() > 3:
+                self.sendMessage(self.className, channel, "No one got the answer! It was %s" % question.answer)
+                question = self.queryHelper.getRandomQuestion()
+            else:
+                self.sendMessage(self.className, channel, "Hint %s: %s" % (question.getHintNum(), question.getHint()))
+
             threading.Timer(15, self.triviaLoop, args=(channel, question)).start()
 
     def triviaHandler(self, username, channel, args):
