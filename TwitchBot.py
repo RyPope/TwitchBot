@@ -61,7 +61,7 @@ class TwitchBot:
     def joinChannel(self, channel):
         self.ircSock.send(str("JOIN " + channel.lower() + "\r\n").encode('UTF-8'))
         time.sleep(.5)
-        self.sendMessage(None, channel, "Hello! I am GameBot created by PopeTheThird. A list of my commands may be found at twitch.tv/PopeTheThird. Please ensure I am modded and allow 30-60 seconds after joining to prevent rate-limiting. Enjoy!", False)
+        self.sendMessage(None, channel, "Hello! I am MiniGameBot. A list of my commands may be found at twitch.tv/PopeTheThird. Please ensure I am modded and allow 30-60 seconds after joining to prevent rate-limiting. Enjoy!", False)
 
     def partChannel(self, channel):
         self.ircSock.send(str("PART " + channel.lower() + "\r\n").encode('UTF-8'))
