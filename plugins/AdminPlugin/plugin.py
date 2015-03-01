@@ -1,6 +1,7 @@
 from plugins.BasePlugin import BasePlugin
 from plugins.AdminPlugin.AdminQueryHelper import AdminQueryHelper
 from util.BaseSettings import Settings
+import hashlib
 
 class AdminPlugin(BasePlugin):
     def __init__(self, twitchBot):
@@ -16,7 +17,8 @@ class AdminPlugin(BasePlugin):
         self.registerCommand(self.className, 'addcommand', self.addCommandHandler)
         self.registerCommand(self.className, 'removecommand', self.removeCommandHandler)
         self.registerCommand(self.className, 'commands', self.viewCommandsHandler)
-        self.registerCommand(self.className, 'signup', self.betaSignUpHandler)
+        self.registerCommand(self.className, 'subscribe', self.betaSignUpHandler)
+        self.registerCommand(self.className, 'unsubscribe', self.unsubscribe)
         self.registerCommand(self.className, 'say', self.sayHandler)
         self.registerCommand(self.className, 'donate', self.donateHandler)
 
@@ -107,7 +109,20 @@ class AdminPlugin(BasePlugin):
             if not value is None:
                 self.sendMessage(self, chan, value)
 
+    def unsubscribe(self, username, channel, args):
+        m = hashlib.md5()
+        m.update(channel)
+        if len(args) < 2:
+            self.sendMessage(self.className, channel, "To have this bot leave your channel please use \"unsubscribe %s\". All your settings and logs will be retained if you wish to subscribe again. Thanks!" % (m.hexdigest(),))
+        elif not (self.queryHelper.isMod(username, channel) or self.queryHelper.isAdmin(username)):
+            self.sendMessage(self.className, channel, "Only channel moderators may use this command.")
+        else:
+            if args[1] == m.hexdigest():
+                self.queryHelper.removeChannel(channel)
+                self.sendMessage(self.className, channel, "Good-bye!")
+                self.partChannel(channel)
+
     def betaSignUpHandler(self, user, chan, args):
-        self.queryHelper.addChannel("#%s" % user, user, False)
-        self.sendMessage(self.className, chan, "Signed up for beta. This bot will join your stream channel when beta begins.")
+        self.queryHelper.addChannel("#%s" % user, user, True)
+        self.sendMessage(self.className, chan, "Signed up. This bot will join your stream channel shortly. It can be removed by using unsubscribe in your channel.")
 

@@ -17,10 +17,25 @@ class TriviaPlugin(BasePlugin):
         self.registerCommand(self.className, "add", self.addHandler)
         self.registerCommand(self.className, "trivia", self.triviaHandler)
         self.registerCommand(self.className, "hint", self.hintHandler)
+        self.registerCommand(self.className, "leaderboard", self.leaderboardHandler)
         self.registerAll(self.className, self.answerHandler)
 
         self.triviaRunning = []
         self.triviaDict = defaultdict(Trivia)
+
+    def leaderboardHandler(self, username, channel, args):
+        if len(args) < 2:
+            self.sendMessage(self.className, channel, "Invalid syntax, please use leaderboard <local | global>")
+        elif args[1].lower() == "local":
+            self.sendMessage(self.className, channel, "Top 5 Trivia users in %s" % channel)
+            for tuple in self.queryHelper.getLocalScores(channel):
+                self.sendMessage(self.className, channel, "%s has correctly answered %s questions for %s points" % (tuple[0], tuple[1], tuple[2]))
+                time.sleep(.5)
+        elif args[1].lower() == "global":
+            self.sendMessage(self.className, channel, "Top 5 Trivia users of all channels")
+            for tuple in self.queryHelper.getGlobalScores():
+                self.sendMessage(self.className, channel, "%s has correctly answered %s questions for %s points" % (tuple[0], tuple[1], tuple[2]))
+                time.sleep(.5)
 
     def answerHandler(self, username, channel, args):
         if channel in self.triviaRunning and not self.triviaDict[channel] is None:

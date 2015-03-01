@@ -67,6 +67,45 @@ class TriviaQueryHelper():
         finally:
             db.close()
 
+    def getLocalScores(self, channel):
+        tuples = []
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+
+                cur.execute("""SELECT `user_id`, `answered`, `points` FROM `trivia_leaderboard` WHERE `channel_id` = %s ORDER BY `points` DESC LIMIT 5""", (channel_id,))
+                rows = cur.fetchall()
+
+                for row in rows:
+                    tuples.append((self.queryHelper.getUsername(row[0]), row[1], row[2]))
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return tuples
+
+    def getGlobalScores(self):
+        tuples = []
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+
+                cur.execute("""SELECT `user_id`, `answered`, `points` FROM `trivia_leaderboard` ORDER BY `points` DESC LIMIT 5""")
+                rows = cur.fetchall()
+
+                for row in rows:
+                    tuples.append((self.queryHelper.getUsername(row[0]), row[1], row[2]))
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return tuples
+
     def isMod(self, username, channel):
         return self.queryHelper.isMod(username, channel)
 

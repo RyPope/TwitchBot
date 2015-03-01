@@ -89,11 +89,12 @@ class BaseQueryHelper():
             db = self.sqlHelper.getConnection()
             with closing(db.cursor()) as cur:
                 enabled_int = 1 if enabled else 0
-                cur.execute("""SELECT channel_id FROM channels WHERE channel = %s""", (channel,))
 
-                if cur.fetchone() is None:
-                    cur.execute("""INSERT IGNORE INTO channels(channel, enabled) VALUES(%s, %s)""", (channel, enabled_int))
-                    db.commit()
+
+                cur.execute("""INSERT INTO `channels` (`channel`, `enabled`) VALUES (%s, %s) ON DUPLICATE KEY
+                UPDATE `enabled` = %s""", (channel, enabled_int, enabled_int))
+
+                db.commit()
 
                 channel_id = self.getChannelID(channel)
                 user_id = self.getUserID(moderator)
@@ -112,12 +113,11 @@ class BaseQueryHelper():
             db = self.sqlHelper.getConnection()
             with closing(db.cursor()) as cur:
                 channel_id = self.getChannelID(channel)
-                cur.execute("""DELETE FROM channels WHERE channel_id = %s""", (channel_id,))
-                cur.execute("""DELETE FROM mods WHERE channel_id = %s""", (channel_id,))
+                cur.execute("""UPDATE `channels` SET `enabled` = 0 WHERE `channel_id` = %s""", (channel_id,))
                 db.commit()
 
         except Exception as e:
-            print("Error inserting new channel")
+            print("Error deleting channel")
             print(traceback.format_exc())
         finally:
             db.close()
