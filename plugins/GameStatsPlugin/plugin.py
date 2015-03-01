@@ -76,7 +76,6 @@ class GameStatsPlugin(BasePlugin):
         else:
             match = self.getGameFromID(args[1])
             points = self.queryHelper.getPoints(username, channel)
-            teamBet = self.parseTeamBet(match, " ".join(args[3:]))
             bet = args[2]
 
             if match is None:
@@ -85,13 +84,14 @@ class GameStatsPlugin(BasePlugin):
                 self.sendMessage(self.className, channel, "Could not retrieve points.")
             elif not bet.isdigit():
                 self.sendMessage(self.className, channel, "Bet must be integer value.")
-            elif teamBet is None:
+            elif self.parseTeamBet(match, " ".join(args[3:])) is None:
                 self.sendMessage(self.className, channel, "Could not find team name for that match.")
             elif int(points) < int(bet):
                 self.sendMessage(self.className, channel, "You cannot bet more points than you have.")
             elif not match.type == 'Upcoming':
                 self.sendMessage(self.className, channel, "You can only bet on upcoming matches.")
             else:
+                teamBet = self.parseTeamBet(match, " ".join(args[3:]))
                 self.sendMessage(self.className, channel, "You have placed a %s point bet on match %s for %s to win for a return of %s"
                 % (bet, match.id, match.opp1 if teamBet == 1 else match.opp2,
                    self.parseReturn(int(bet), str(match.bet1 if teamBet == 1 else match.bet2))))

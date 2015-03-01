@@ -6,7 +6,7 @@ from contextlib import closing
 import traceback
 from objects.trivia import Trivia
 from random import randint
-
+import difflib
 
 class TriviaQueryHelper():
     def __init__(self):
@@ -125,6 +125,8 @@ class TriviaQueryHelper():
             db.close()
 
     def findCategoryID(self, category):
+        categories = []
+        result = -1
         try:
             db = self.sqlHelper.getConnection()
 
@@ -134,14 +136,17 @@ class TriviaQueryHelper():
                 rows = cur.fetchall()
 
                 for row in rows:
-                    if category.lower().encode("UTF-8") == row[1].lower():
-                        return row[0]
+                    categories.append( { "id":row[0], "name":row[1].encode("UTF-8") } )
 
-            return -1
+                sortedList = sorted(categories, key=lambda x: difflib.SequenceMatcher(None, x['name'], category).ratio(), reverse=True)
+                print(sortedList)
+                result = sortedList[0]['id']
+
         except Exception as e:
             print(traceback.format_exc())
         finally:
             db.close()
+            return result
 
     def insertQuestion(self, category, question, answer, value):
         try:
