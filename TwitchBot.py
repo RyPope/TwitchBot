@@ -13,7 +13,7 @@ from util.BaseSettings import Settings
 from database.BaseQueryHelper import BaseQueryHelper
 from signal import *
 import threading
-
+import logging
 
 class TwitchBot:
     def __init__(self):
@@ -162,6 +162,7 @@ class TwitchBot:
 
                 for ircMsg in ircMsgs:
                     msg = ircMsg.decode('utf-8')
+                    logging.info(msg)
                     Thread(target=self.handleIRCMessage, args=(msg,)).start()
             except Exception as e:
                 print(traceback.format_exc())
@@ -201,6 +202,9 @@ class TwitchBot:
             print(traceback.format_exc())
 
 if __name__ == "__main__":
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', filename='logs/irc_log.log', level=logging.DEBUG)
     while True:
         twitchBot = TwitchBot()
         try:
@@ -209,5 +213,6 @@ if __name__ == "__main__":
             twitchBot.run()
         except Exception as e:
             print(traceback.format_exc())
+            logging.error(traceback.format_exc)
         twitchBot.kill()
         time.sleep(5)

@@ -21,8 +21,24 @@ class AdminPlugin(BasePlugin):
         self.registerCommand(self.className, 'unsubscribe', self.unsubscribe)
         self.registerCommand(self.className, 'say', self.sayHandler)
         self.registerCommand(self.className, 'donate', self.donateHandler)
+        self.registerCommand(self.className, 'bug', self.bugHandler)
+        self.registerCommand(self.className, 'contact', self.contactHandler)
 
         self.registerAll(self.className, self.commandHandler)
+
+    def bugHandler(self, username, channel, args):
+        if len(args) < 2:
+            self.sendMessage(self.className, channel, "All bug reports are appreciated! Please use report <issue description> to file a bug report.")
+        else:
+            self.sendMessage(self.className, channel, "Thank you for your bug report.");
+            self.queryHelper.logBug(username, channel, " ".join(args[1:]))
+
+    def contactHandler(self, username, channel, args):
+        if len(args) < 2:
+            self.sendMessage(self.className, channel, "To write a message for the admins please use contact <message>.")
+        else:
+            self.sendMessage(self.className, channel, "Your message has been sent.");
+            self.queryHelper.logMail(username, channel, " ".join(args[1:]))
 
     def donateHandler(self, username, channel, args):
         self.sendMessage(self.className, channel, "If you enjoy the use of this bot please feel free to either follow the developer at twitch.tv/PopeTheThird or donate at twitchalerts.com/donate/popethethird. All are appreciated! Bitcoin accepted at 15KCMc2swEeqdmcx1UjCyWVLeUsJsxc9xx.")

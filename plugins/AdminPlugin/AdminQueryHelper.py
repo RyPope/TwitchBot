@@ -9,6 +9,32 @@ class AdminQueryHelper():
     def __init__(self):
         self.queryHelper = BaseQueryHelper()
         self.sqlHelper = SQLHelper()
+        self.initTables()
+
+    def initTables(self):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                cur.execute("CREATE TABLE IF NOT EXISTS `bug_log` "
+                            "(`bug_id` int NOT NULL AUTO_INCREMENT,"
+                            "`user_id` int,"
+                            "`channel_id` int,"
+                            "`description` TEXT,"
+                            "PRIMARY KEY (`bug_id`))")
+
+                cur.execute("CREATE TABLE IF NOT EXISTS `mail_log` "
+                            "(`mail_id` int NOT NULL AUTO_INCREMENT,"
+                            "`user_id` int,"
+                            "`channel_id` int,"
+                            "`message` TEXT,"
+                            "PRIMARY KEY (`mail_id`))")
+                db.commit()
+
+        except Exception as e:
+            print("Error initializing admin tables")
+            print(traceback.format_exc())
+        finally:
+            db.close()
 
     def isMod(self, username, channel):
         return self.queryHelper.isMod(username, channel)
@@ -34,6 +60,38 @@ class AdminQueryHelper():
 
         except Exception as e:
             print("Error inserting new moderator")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
+    def logBug(self, username, channel, description):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                user_id = self.queryHelper.getUserID(username)
+                channel_id = self.queryHelper.getChannelID(channel)
+
+                cur.execute("""INSERT IGNORE INTO `bug_log` (`channel_id`, `user_id`, `description`) VALUES(%s, %s, %s)""", (channel_id, user_id, description))
+                db.commit()
+
+        except Exception as e:
+            print("Error inserting new bug")
+            print(traceback.format_exc())
+        finally:
+            db.close()
+
+    def logMail(self, username, channel, message):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                user_id = self.queryHelper.getUserID(username)
+                channel_id = self.queryHelper.getChannelID(channel)
+
+                cur.execute("""INSERT IGNORE INTO `mail_log` (`channel_id`, `user_id`, `message`) VALUES(%s, %s, %s)""", (channel_id, user_id, message))
+                db.commit()
+
+        except Exception as e:
+            print("Error inserting mail")
             print(traceback.format_exc())
         finally:
             db.close()
