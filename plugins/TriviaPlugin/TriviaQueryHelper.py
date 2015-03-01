@@ -52,6 +52,13 @@ class TriviaQueryHelper():
                     "`channel_id` TEXT,"
                     "`timestamp` DATETIME DEFAULT CURRENT_TIMESTAMP,"
                     "PRIMARY KEY (`suggestion_id`))")
+
+                cur.execute("CREATE TABLE IF NOT EXISTS `trivia_leaderboard` "
+                            "(`user_id` INT NOT NULL,"
+                            "`channel_id` INT NOT NULL,"
+                            "`answered` INT DEFAULT 1,"
+                            "`points` INT DEFAULT 0,"
+                            "PRIMARY KEY (`user_id`, `channel_id`))")
                 db.commit()
 
         except Exception as e:
@@ -74,6 +81,25 @@ class TriviaQueryHelper():
 
     def increasePoints(self, username, channel, points):
         self.loggingQueryHelper.increasePoints(username, channel, points)
+        self.updateLeaderboard(username, channel, points)
+
+    def updateLeaderboard(self, username, channel, points):
+        try:
+            db = self.sqlHelper.getConnection()
+            with closing(db.cursor()) as cur:
+                channel_id = self.queryHelper.getChannelID(channel)
+                user_id = self.queryHelper.getUserID(username)
+
+                cur.execute("""INSERT INTO `trivia_leaderboard` (`channel_id`, `user_id`, `points`) VALUES (%s, %s, %s) ON DUPLICATE KEY
+                UPDATE `answered` = `answered` + 1, `points` = `points` + %s""", (channel_id, user_id, points, points))
+
+                db.commit()
+
+        except Exception as e:
+            print("Error updating leaderboard")
+            print(traceback.format_exc())
+        finally:
+            db.close()
 
     def insertCategorySuggestion(self, username, channel, name, description):
         try:
@@ -139,7 +165,6 @@ class TriviaQueryHelper():
                     categories.append( { "id":row[0], "name":row[1].encode("UTF-8") } )
 
                 sortedList = sorted(categories, key=lambda x: difflib.SequenceMatcher(None, x['name'], category).ratio(), reverse=True)
-                print(sortedList)
                 result = sortedList[0]['id']
 
         except Exception as e:

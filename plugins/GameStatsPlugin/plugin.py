@@ -29,7 +29,7 @@ class GameStatsPlugin(BasePlugin):
         print("Terminating plugin")
 
     def pointHandler(self, username, channel, args):
-        self.sendMessage(self.className, channel, "You currently have %s points." % self.queryHelper.getPoints(username, channel))
+        self.sendMessage(self.className, channel, "%s currently has %s points." % (username, self.queryHelper.getPoints(username, channel)))
 
     def betsHandler(self, username, channel, args):
         if len(args) < 2:
@@ -41,12 +41,12 @@ class GameStatsPlugin(BasePlugin):
             bets = self.queryHelper.getBets(username, channel, status)
 
             if len(bets) == 0:
-                self.sendMessage(self.className, channel, "No %s bets found." % status)
+                self.sendMessage(self.className, channel, "No %s bets found for %s." % (status, username))
             if status == 'active':
                 for bet in bets[:5]:
                     game = self.getGameFromID(bet.match_id)
-                    self.sendMessage(self.className, channel, "You bet %s points for %s on match %s - %s %s vs %s %s"
-                    % (bet.betAmount, game.opp1 if int(bet.betFor) == 1 else bet.opp2, bet.match_id, game.opp1, game.bet1, game.opp2, game.bet2))
+                    self.sendMessage(self.className, channel, "%s bet %s points for %s on match %s - %s %s vs %s %s"
+                    % (username, bet.betAmount, game.opp1 if int(bet.betFor) == 1 else bet.opp2, bet.match_id, game.opp1, game.bet1, game.opp2, game.bet2))
                     time.sleep(.5)
             else:
                 for bet in bets[:5]:
@@ -61,12 +61,12 @@ class GameStatsPlugin(BasePlugin):
                             winner = 1
 
                         if int(winner) == int(bet.betFor):
-                            outcome = "Won"
+                            outcome = "won"
                         else:
-                            outcome = "Lost"
+                            outcome = "lost"
 
-                        self.sendMessage(self.className, channel, "%s %s points on match %s, %s %s vs %s %s"
-                                         % (outcome, self.parseReturn(int(bet.betAmount), str(game.bet1 if bet.betFor == 1 else game.bet2)),
+                        self.sendMessage(self.className, channel, "%s %s %s points on match %s, %s %s vs %s %s"
+                                         % (username, outcome, self.parseReturn(int(bet.betAmount), str(game.bet1 if bet.betFor == 1 else game.bet2)),
                                             bet.match_id, game.opp1, game.bet1, game.opp2, game.bet2))
                         time.sleep(.5)
 
@@ -92,8 +92,8 @@ class GameStatsPlugin(BasePlugin):
                 self.sendMessage(self.className, channel, "You can only bet on upcoming matches.")
             else:
                 teamBet = self.parseTeamBet(match, " ".join(args[3:]))
-                self.sendMessage(self.className, channel, "You have placed a %s point bet on match %s for %s to win for a return of %s"
-                % (bet, match.id, match.opp1 if teamBet == 1 else match.opp2,
+                self.sendMessage(self.className, channel, "%s has placed a %s point bet on match %s for %s to win for a return of %s"
+                % (username, bet, match.id, match.opp1 if teamBet == 1 else match.opp2,
                    self.parseReturn(int(bet), str(match.bet1 if teamBet == 1 else match.bet2))))
 
                 self.queryHelper.insertBet(bet, teamBet, match, username, channel)

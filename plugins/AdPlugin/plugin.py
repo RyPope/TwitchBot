@@ -9,25 +9,9 @@ class AdPlugin(BasePlugin):
         self.className = self.__class__.__name__
         self.queryHelper = AdQueryHelper()
 
-        self.registerCommand(self.className, "setad", self.setAdHandler)
-        self.registerCommand(self.className, "startad", self.startAdHandler)
-        self.registerCommand(self.className, "pausead", self.pauseAdHandler)
+        self.registerCommand(self.className, "ad", self.setAdHandler)
 
         threading.Timer(10, self.startTimer).start()
-
-    def startAdHandler(self, username, channel, args):
-        if not (self.queryHelper.isMod(username, channel or self.queryHelper.isAdmin(username))):
-            self.sendMessage(self.className, channel, "You must be a moderator or admin to use this command.")
-        else:
-            self.queryHelper.setAdEnabled(channel, True)
-            self.sendMessage(self.className, channel, "You have started a recurring message")
-
-    def pauseAdHandler(self, username, channel, args):
-        if not (self.queryHelper.isMod(username, channel or self.queryHelper.isAdmin(username))):
-            self.sendMessage(self.className, channel, "You must be a moderator or admin to use this command.")
-        else:
-            self.queryHelper.setAdEnabled(channel, False)
-            self.sendMessage(self.className, channel, "You have paused a recurring message")
 
     def startTimer(self):
         advertisements = self.queryHelper.getAllAds()
@@ -42,13 +26,27 @@ class AdPlugin(BasePlugin):
         self.sendMessage(self.className, self.queryHelper.getChannel(advertisement.channel_id), advertisement.message)
 
     def setAdHandler(self, username, channel, args):
-        if len(args) < 3:
-            self.sendMessage(self.className, channel, "Invalid syntax, please use setad <interval> <message>")
-        elif (not args[1].isdigit()) or (not int(args[1]) % 5 == 0):
-            self.sendMessage(self.className, channel, "Interval must be integer of 5 minute increment.")
-        elif not (self.queryHelper.isMod(username, channel or self.queryHelper.isAdmin(username))):
-            self.sendMessage(self.className, channel, "You must be a moderator or admin to use this command.")
-        else:
-            self.queryHelper.insertOrUpdateAd(channel, args[1], " ".join(args[2:]))
-            self.sendMessage(self.className, channel, "Update advertisement to %s every %s minutes" % (" ".join(args[2:], args[1])))
-
+        if len(args) < 2:
+            self.sendMessage(self.className, channel, "Invalid syntax, please use ad <start | pause | set>")
+        elif args[1].lower() == "set":
+            if len(args) < 3:
+                self.sendMessage(self.className, channel, "Invalid syntax, please use setad <interval> <message>")
+            elif (not args[2].isdigit()) or (not int(args[2]) % 5 == 0):
+                self.sendMessage(self.className, channel, "Interval must be integer of 5 minute increment.")
+            elif not (self.queryHelper.isMod(username, channel or self.queryHelper.isAdmin(username))):
+                self.sendMessage(self.className, channel, "You must be a moderator or admin to use this command.")
+            else:
+                self.queryHelper.insertOrUpdateAd(channel, args[2], " ".join(args[3:]))
+                self.sendMessage(self.className, channel, "Update advertisement to %s every %s minutes" % (" ".join(args[3:], args[2])))
+        elif args[1].lower() == "start":
+            if not (self.queryHelper.isMod(username, channel) or self.queryHelper.isAdmin(username)):
+                self.sendMessage(self.className, channel, "You must be a moderator or admin to use this command.")
+            else:
+                self.queryHelper.setAdEnabled(channel, True)
+                self.sendMessage(self.className, channel, "You have started a recurring message")
+        elif args[1].lower() == "pause":
+            if not (self.queryHelper.isMod(username, channel) or self.queryHelper.isAdmin(username)):
+                self.sendMessage(self.className, channel, "You must be a moderator or admin to use this command.")
+            else:
+                self.queryHelper.setAdEnabled(channel, False)
+                self.sendMessage(self.className, channel, "You have paused a recurring message")

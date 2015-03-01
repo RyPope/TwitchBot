@@ -23,27 +23,29 @@ class TriviaPlugin(BasePlugin):
         self.triviaDict = defaultdict(Trivia)
 
     def answerHandler(self, username, channel, args):
-        if channel in self.triviaRunning:
+        if channel in self.triviaRunning and not self.triviaDict[channel] is None:
             answer = " ".join(args).lower().strip()
             if answer == self.triviaDict[channel].answer:
                 question = self.triviaDict[channel]
-                self.sendMessage(self.className, channel, "%s has answered correctly and been rewarded %s points" % (username, question.value))
+                self.sendMessage(self.className, channel, "%s has answered correctly (\"%s\") and been rewarded %s points" % (username, question.answer, question.value))
                 self.queryHelper.increasePoints(username, channel, question.value)
-                self.triviaDict[channel] = self.queryHelper.getRandomQuestion()
+                self.triviaDict[channel] = None
 
     def hintHandler(self, username, channel, args):
-        if channel in self.triviaRunning:
+        if channel in self.triviaRunning and not self.triviaDict[channel] is None:
             trivia = self.triviaDict[channel]
             self.sendMessage(self.className, channel, "Question: %s - Hint %s: %s" % (trivia.question, trivia.hint_num, trivia.hint))
         else:
-            self.sendMessage(self.className, channel, "Trivia is not currently running, type !trivia start to run.")
+            self.sendMessage(self.className, channel, "Trivia is not currently running or a question has not been asked yet.")
 
     def triviaLoop(self, channel):
         if channel in self.triviaRunning:
+            if self.triviaDict[channel] == None:
+                self.triviaDict[channel] = self.queryHelper.getRandomQuestion()
             question = self.triviaDict[channel]
             if question.hint_num > 3:
                 self.sendMessage(self.className, channel, "No one got the answer! It was %s" % question.answer)
-                question = self.queryHelper.getRandomQuestion()
+                question = None
             else:
                 if question.hint_num == 0:
                     self.sendMessage(self.className, channel, "Question (%s points): %s" % (self.triviaDict[channel].value, self.triviaDict[channel].question))
@@ -56,7 +58,7 @@ class TriviaPlugin(BasePlugin):
             threading.Timer(60 * 2, self.triviaLoop, args=(channel,)).start()
 
     def triviaHandler(self, username, channel, args):
-        if not self.queryHelper.isMod(username, channel) or not self.queryHelper.isAdmin(username):
+        if not (self.queryHelper.isMod(username, channel) or self.queryHelper.isAdmin(username)):
             self.sendMessage(self.className, channel, "This command is available to mods or admins only.")
         else:
             if args[1].lower() == "start":
