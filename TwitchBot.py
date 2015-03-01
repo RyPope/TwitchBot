@@ -12,6 +12,7 @@ from plugins.BasePlugin import BasePlugin
 from util.BaseSettings import Settings
 from database.BaseQueryHelper import BaseQueryHelper
 from signal import *
+import threading
 
 
 class TwitchBot:
@@ -32,6 +33,7 @@ class TwitchBot:
         self.loadedPluginNames = []
         self.moddedInList = ['#popethethird']
         self.ignoredPlugins = ['SpamPlugin']
+        self.ignoredUsers = []
 
         self.queryHelper = BaseQueryHelper()
 
@@ -46,9 +48,6 @@ class TwitchBot:
         else:
             print("Channel %s attempted to use commands without modding bot" % chan)
 
-        # self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
-
-
     def connect(self, port):
         self.ircSock.connect((self.irc_host, port))
         self.ircSock.send(str("Pass " + Settings.irc_oauth + "\r\n").encode('UTF-8'))
@@ -61,6 +60,8 @@ class TwitchBot:
 
     def joinChannel(self, channel):
         self.ircSock.send(str("JOIN " + channel.lower() + "\r\n").encode('UTF-8'))
+        time.sleep(.5)
+        self.sendMessage(None, channel, "Hello! I am GameBot created by PopeTheThird. A list of my commands may be found at twitch.tv/PopeTheThird. Please ensure I am modded and allow 30-60 seconds after joining to prevent rate-limiting. Enjoy!", False)
 
     def partChannel(self, channel):
         self.ircSock.send(str("PART " + channel.lower() + "\r\n").encode('UTF-8'))
@@ -86,9 +87,17 @@ class TwitchBot:
             for pluginDict in self.commands:
                 if re.search('^' + Settings.irc_trigger + pluginDict['regex'] + '\\b', msg, re.IGNORECASE) \
                         and not self.queryHelper.checkPluginDisabled(chan, pluginDict['plugin']):
-                    handler = pluginDict['handler']
-                    args = msg.split(" ")
-                    handler(nick, chan, args)
+
+                    if not nick in self.ignoredUsers:
+                        handler = pluginDict['handler']
+                        args = msg.split(" ")
+                        handler(nick, chan, args)
+
+                        if not (self.queryHelper.isMod(nick, chan) or self.queryHelper.isAdmin(nick)):
+                            self.ignoredUsers.append(nick)
+                            threading.Timer(5, self.removeIgnored, args=(nick,)).start()
+                    else:
+                        print("User %s attempted to use command quickly in %s" % (nick, chan))
 
             for pluginDict in self.msgRegister:
                 if not self.queryHelper.checkPluginDisabled(chan, pluginDict['plugin']):
@@ -134,6 +143,10 @@ class TwitchBot:
                     print("Unmodded in %s" % chan)
         else:
             pass
+
+    def removeIgnored(self, username):
+        if username in self.ignoredUsers:
+            self.ignoredUsers.remove(username)
 
     def run(self):
         line_sep_exp = re.compile(b'\r?\n')

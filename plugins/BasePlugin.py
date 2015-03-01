@@ -14,7 +14,7 @@ class BasePlugin(object):
     def registerJoinPartNotifications(self, className, handler):
         self.twitchBot.registerJoinPartNotifications(className, handler)
 
-    def sendMessage(self, className, chan, message, needMod=False):
+    def sendMessage(self, className, chan, message, needMod=True):
         self.twitchBot.sendMessage(className, chan, message, needMod)
 
     def joinChannel(self, channel):

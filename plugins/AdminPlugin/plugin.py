@@ -18,8 +18,12 @@ class AdminPlugin(BasePlugin):
         self.registerCommand(self.className, 'commands', self.viewCommandsHandler)
         self.registerCommand(self.className, 'signup', self.betaSignUpHandler)
         self.registerCommand(self.className, 'say', self.sayHandler)
+        self.registerCommand(self.className, 'donate', self.donateHandler)
 
         self.registerAll(self.className, self.commandHandler)
+
+    def donateHandler(self, username, channel, args):
+        self.sendMessage(self.className, channel, "If you enjoy the use of this bot please feel free to either follow the developer at twitch.tv/PopeTheThird or donate at twitchalerts.com/donate/popethethird. All are appreciated! Bitcoin accepted at 15KCMc2swEeqdmcx1UjCyWVLeUsJsxc9xx.")
 
     def addChannelHandler(self, nick, chan, args):
         if not len(args) == 3:

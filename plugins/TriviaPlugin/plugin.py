@@ -28,6 +28,7 @@ class TriviaPlugin(BasePlugin):
             if answer == self.triviaDict[channel].answer:
                 question = self.triviaDict[channel]
                 self.sendMessage(self.className, channel, "%s has answered correctly and been rewarded %s points" % (username, question.value))
+                self.queryHelper.increasePoints(username, channel, question.value)
                 self.triviaDict[channel] = self.queryHelper.getRandomQuestion()
 
     def hintHandler(self, username, channel, args):
@@ -52,7 +53,7 @@ class TriviaPlugin(BasePlugin):
                 question.hint_num += 1
 
             self.triviaDict[channel] = question
-            threading.Timer(15, self.triviaLoop, args=(channel,)).start()
+            threading.Timer(60 * 2, self.triviaLoop, args=(channel,)).start()
 
     def triviaHandler(self, username, channel, args):
         if not self.queryHelper.isMod(username, channel) or not self.queryHelper.isAdmin(username):

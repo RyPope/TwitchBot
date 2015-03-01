@@ -69,16 +69,10 @@ class TriviaQueryHelper():
     def getPoints(self, username, channel):
         return self.loggingQueryHelper.getPoints(username, channel)
 
-    def deductPoints(self, user_id, channel_id, points):
-        username = self.queryHelper.getUsername(user_id)
-        channel = self.queryHelper.getChannel(channel_id)
-
+    def deductPoints(self, username, channel, points):
         self.loggingQueryHelper.deductPoints(username, channel, points)
 
-    def increasePoints(self, user_id, channel_id, points):
-        username = self.queryHelper.getUsername(user_id)
-        channel = self.queryHelper.getChannel(channel_id)
-
+    def increasePoints(self, username, channel, points):
         self.loggingQueryHelper.increasePoints(username, channel, points)
 
     def insertCategorySuggestion(self, username, channel, name, description):
