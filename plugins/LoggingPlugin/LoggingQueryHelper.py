@@ -21,7 +21,7 @@ class LoggingQueryHelper():
                     "`channel_id` int NOT NULL,"
                     "`user_id` int NOT NULL,"
                     "`msg` text,"
-                    "`timestamp` datetime DEFAULT CURRENT_TIMESTAMP,"
+                    "`timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
                     "PRIMARY KEY (`message_id`))")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `time_spent`"

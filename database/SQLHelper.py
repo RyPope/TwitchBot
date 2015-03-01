@@ -74,7 +74,7 @@ class SQLHelper:
                             "(`user_id` int NOT NULL AUTO_INCREMENT,"
                             "`username` varchar(128) NOT NULL UNIQUE,"
                             "`is_admin` tinyint(1) DEFAULT 0,"
-                            "`first_seen` datetime DEFAULT CURRENT_TIMESTAMP,"
+                            "`first_seen` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
                             "PRIMARY KEY (`user_id`))")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `disabled_plugins` "

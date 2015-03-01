@@ -39,7 +39,7 @@ class TriviaQueryHelper():
                     "`description` TEXT,"
                     "`user_id` TEXT,"
                     "`channel_id` TEXT,"
-                    "`timestamp` DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                    "`timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
                     "PRIMARY KEY (`suggestion_id`))")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `trivia_question_suggestions` "
@@ -50,7 +50,7 @@ class TriviaQueryHelper():
                     "`value` INT DEFAULT 0,"
                     "`user_id` TEXT,"
                     "`channel_id` TEXT,"
-                    "`timestamp` DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                    "`timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
                     "PRIMARY KEY (`suggestion_id`))")
 
                 cur.execute("CREATE TABLE IF NOT EXISTS `trivia_leaderboard` "
