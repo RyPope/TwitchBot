@@ -18,10 +18,14 @@ class TriviaPlugin(BasePlugin):
         self.registerCommand(self.className, "trivia", self.triviaHandler)
         self.registerCommand(self.className, "hint", self.hintHandler)
         self.registerCommand(self.className, "leaderboard", self.leaderboardHandler)
+        self.registerCommand(self.className, "categories", self.categoriesHandler)
         self.registerAll(self.className, self.answerHandler)
 
         self.triviaRunning = []
         self.triviaDict = defaultdict(Trivia)
+
+    def categoriesHandler(self, username, channel, args):
+        self.sendMessage(self.className, channel, "Available categories are %s" % self.queryHelper.getCategoryNames())
 
     def leaderboardHandler(self, username, channel, args):
         if len(args) < 2:
@@ -63,7 +67,8 @@ class TriviaPlugin(BasePlugin):
                 question = None
             else:
                 if question.hint_num == 0:
-                    self.sendMessage(self.className, channel, "Question (%s points): %s" % (self.triviaDict[channel].value, self.triviaDict[channel].question))
+                    self.sendMessage(self.className, channel, "(%s) Question (%s points): %s"
+                                     % (self.queryHelper.getCatName(self.triviaDict[channel].category_id), self.triviaDict[channel].value, self.triviaDict[channel].question))
                 time.sleep(.5)
 
                 self.sendMessage(self.className, channel, "Hint %s: %s" % (question.hint_num, question.getHint()))
@@ -73,20 +78,33 @@ class TriviaPlugin(BasePlugin):
             threading.Timer(60 * 2, self.triviaLoop, args=(channel,)).start()
 
     def triviaHandler(self, username, channel, args):
-        if not (self.queryHelper.isMod(username, channel) or self.queryHelper.isAdmin(username)):
+        if len(args) < 2:
+            self.sendMessage(self.className, channel, "Invalid syntax, please use trivia <start | pause>.")
+        elif not (self.queryHelper.isMod(username, channel) or self.queryHelper.isAdmin(username)):
             self.sendMessage(self.className, channel, "This command is available to mods or admins only.")
         else:
             if args[1].lower() == "start":
-                if not channel in self.triviaRunning:
-                    self.triviaRunning.append(channel)
-                    trivia = self.queryHelper.getRandomQuestion()
-                    self.triviaDict[channel] = trivia
-                    self.triviaLoop(channel)
+                if len(args) < 3:
+                    self.sendMessage(self.className, channel, "Invalid syntax, please use trivia start <category name> or \"all\".")
+                else:
+                    if not channel in self.triviaRunning:
+                        if args[2].lower() == "all":
+                            trivia = self.queryHelper.getRandomQuestion()
+                        else:
+                            trivia = self.queryHelper.getQuestion(args[2].lower())
+                        self.triviaRunning.append(channel)
+                        self.triviaDict[channel] = trivia
+                        self.triviaLoop(channel)
+                    else:
+                        self.sendMessage(self.className, channel, "Trivia is already running.")
 
             elif args[1].lower() == "stop":
                 if channel in self.triviaRunning:
                     self.triviaRunning.remove(channel)
-                    self.sendMessage(self.className, channel, "Trivia ended. The answer for \"%s\" was \"%s\"" % (self.triviaDict[channel].question, self.triviaDict[channel].answer))
+                    if not self.triviaDict[channel] is None:
+                        self.sendMessage(self.className, channel, "Trivia ended. The answer for \"%s\" was \"%s\"" % (self.triviaDict[channel].question, self.triviaDict[channel].answer))
+                    else:
+                        self.sendMessage(self.className, channel, "Trivia ended.");
 
 
     def suggestHandler(self, username, channel, args):

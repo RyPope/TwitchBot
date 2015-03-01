@@ -67,6 +67,24 @@ class TriviaQueryHelper():
         finally:
             db.close()
 
+    def getCatName(self, category_id):
+        category = None
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                cur.execute("""SELECT `name` FROM `trivia_categories` WHERE `category_id` = %s""", (category_id,))
+
+                result = cur.fetchone()
+                if not result is None:
+                    category = result[0]
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return category
+
     def getLocalScores(self, channel):
         tuples = []
         try:
@@ -139,6 +157,25 @@ class TriviaQueryHelper():
             print(traceback.format_exc())
         finally:
             db.close()
+
+    def getCategoryNames(self):
+        categories = []
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+
+                cur.execute("""SELECT `name` FROM `trivia_categories`""")
+                rows = cur.fetchall()
+
+                for row in rows:
+                    categories.append(row[0])
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return ", ".join(categories)
 
     def insertCategorySuggestion(self, username, channel, name, description):
         try:
@@ -227,6 +264,30 @@ class TriviaQueryHelper():
             print(traceback.format_exc())
         finally:
             db.close()
+
+    def getQuestion(self, category):
+        question = None
+        try:
+            db = self.sqlHelper.getConnection()
+
+            with closing(db.cursor()) as cur:
+                closest_cat_id = self.findCategoryID(category)
+
+                cur.execute("""SELECT `question_id` FROM `trivia_questions` WHERE `category_id` = %s""", (closest_cat_id,))
+                questionIDList = cur.fetchall()
+
+                rand = randint(0, len(questionIDList) - 1)
+
+                cur.execute("""SELECT * FROM `trivia_questions` WHERE `question_id` = %s""", (questionIDList[rand][0],))
+                result = cur.fetchone()
+
+                question = Trivia(result[0], result[1], result[2], result[3], result[4])
+
+        except Exception as e:
+            print(traceback.format_exc())
+        finally:
+            db.close()
+            return question
 
     def getRandomQuestion(self):
         question = None
