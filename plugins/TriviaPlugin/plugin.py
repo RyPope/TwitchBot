@@ -142,25 +142,27 @@ class TriviaPlugin(BasePlugin):
         elif not self.queryHelper.isAdmin(username):
             self.sendMessage(self.className, channel, "This command is available to admins only.")
         elif args[1].lower() == "category":
-            if len(args) < 4:
-                self.sendMessage(self.className, channel, "Invalid syntax, please use add category <category name> <category description>")
+            quoted = re.findall('"([^"]*)"', " ".join(args[2:]))
+            if not len(quoted) == 2:
+                self.sendMessage(self.className, channel, "Invalid syntax, please enter category and category description between seperate double quotes.")
+            elif len(args) < 4:
+                self.sendMessage(self.className, channel, "Invalid syntax, please use add category \"<category name>\" \"<category description>\"")
             else:
-                name = args[2]
-                description = " ".join(args[3:])
+                name = quoted[0]
+                description = quoted[1]
                 self.queryHelper.insertCategory(name, description)
-                self.sendMessage(self.className, channel, "Your suggestion has been added.")
+                self.sendMessage(self.className, channel, "Your category has been added.")
         elif args[1].lower() == "question":
             if len(args) < 4:
-                self.sendMessage(self.className, channel, "Invalid syntax, please use add question <category> \"<question>\" \"<answer>\" <points>")
+                self.sendMessage(self.className, channel, "Invalid syntax, please use add question \"<category>\" \"<question>\" \"<answer>\" <points>")
             else:
-                category = args[2]
-                quoted = re.findall('"([^"]*)"', " ".join(args[3:]))
+                quoted = re.findall('"([^"]*)"', " ".join(args[2:]))
                 points = args[-1]
 
-                if not len(quoted) == 2:
-                    self.sendMessage(self.className, channel, "Invalid syntax, please enter question and answer between seperate double quotes.")
+                if not len(quoted) == 3:
+                    self.sendMessage(self.className, channel, "Invalid syntax, please enter category, question and answer between seperate double quotes.")
                 elif not points.isdigit() or int(points) <= 0:
                     self.sendMessage(self.className, channel, "Invalid syntax, point value must be positive integer.")
                 else:
-                    self.queryHelper.insertQuestion(category, quoted[0], quoted[1], points)
+                    self.queryHelper.insertQuestion(quoted[0], quoted[1], quoted[2], points)
                     self.sendMessage(self.className, channel, "Your question has been added.")
