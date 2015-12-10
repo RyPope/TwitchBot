@@ -322,7 +322,7 @@ class GameStatsPlugin(BasePlugin):
         self.hotsRecentList = []
 
     def checkBets(self):
-        threading.Timer(120, self.checkBets).start()
+        threading.Timer(60 * 60, self.checkBets).start()
         bets = self.queryHelper.getAllActiveBets()
 
         for bet in bets:
@@ -343,7 +343,7 @@ class GameStatsPlugin(BasePlugin):
 
 
     def updateMatches(self):
-        threading.Timer(120, self.updateMatches).start()
+        threading.Timer(60 * 60, self.updateMatches).start()
         gamesToUpdate = ["csgo", "lol", "dota2", "hearth", "hots"]
         csgoMatchLink = "http://www.gosugamers.net/counterstrike/gosubet"
         dotaMatchLink = "http://www.gosugamers.net/dota2/gosubet"

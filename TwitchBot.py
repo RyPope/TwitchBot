@@ -31,7 +31,7 @@ class TwitchBot:
         self.msgRegister = []
         self.joinPartHandlers = []
         self.loadedPluginNames = []
-        self.moddedInList = ['#popethethird']
+        self.moddedInList = ['#popethethird', '#joeruu']
         self.ignoredPlugins = ['SpamPlugin']
         self.ignoredUsers = []
 
@@ -44,6 +44,7 @@ class TwitchBot:
 
     def sendMessage(self, className, chan, message, needMod=True):
         if (needMod and chan in self.moddedInList) or (not needMod):
+            print("%s: %s" % (chan, message))
             self.ircSock.send(str('PRIVMSG %s :%s\n' % (chan, message)).encode('UTF-8'))
         else:
             print("Channel %s attempted to use commands without modding bot" % chan)
@@ -61,7 +62,7 @@ class TwitchBot:
     def joinChannel(self, channel):
         self.ircSock.send(str("JOIN " + channel.lower() + "\r\n").encode('UTF-8'))
         time.sleep(.5)
-        self.sendMessage(None, channel, "Hello! I am MiniGameBot. A list of my commands may be found at twitch.tv/PopeTheThird. Please ensure I am modded and allow 30-60 seconds after joining to prevent rate-limiting. Enjoy!", False)
+        # self.sendMessage(None, channel, "Hello! I am MiniGameBot. A list of my commands may be found at twitch.tv/PopeTheThird. Please ensure I am modded and allow 30-60 seconds after joining to prevent rate-limiting. Enjoy!", False)
 
     def partChannel(self, channel):
         self.ircSock.send(str("PART " + channel.lower() + "\r\n").encode('UTF-8'))
@@ -76,7 +77,7 @@ class TwitchBot:
         self.joinPartHandlers.append( { 'handler':pluginFunction, 'plugin':className } )
 
     def handleIRCMessage(self, ircMessage):
-        # print("IRC: " + ircMessage)
+        print(ircMessage)
         nick = ircMessage.split('!')[0][1:]
 
         # Message to a channel

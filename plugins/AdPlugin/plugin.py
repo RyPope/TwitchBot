@@ -37,7 +37,7 @@ class AdPlugin(BasePlugin):
                 self.sendMessage(self.className, channel, "You must be a moderator or admin to use this command.")
             else:
                 self.queryHelper.insertOrUpdateAd(channel, args[2], " ".join(args[3:]))
-                self.sendMessage(self.className, channel, "Update advertisement to %s every %s minutes" % (" ".join(args[3:], args[2])))
+                self.sendMessage(self.className, channel, "Update advertisement to %s every %s minutes" % (" ".join(args[3:]), args[2]))
         elif args[1].lower() == "start":
             if not (self.queryHelper.isMod(username, channel) or self.queryHelper.isAdmin(username)):
                 self.sendMessage(self.className, channel, "You must be a moderator or admin to use this command.")

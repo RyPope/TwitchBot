@@ -6,6 +6,7 @@ from collections import defaultdict
 from objects.trivia import Trivia
 import time
 
+TIMEOUT_MIN = 3
 class TriviaPlugin(BasePlugin):
     def __init__(self, twitchBot):
         super(TriviaPlugin, self).__init__(twitchBot)
@@ -75,7 +76,7 @@ class TriviaPlugin(BasePlugin):
                 question.hint_num += 1
 
             self.triviaDict[channel] = question
-            threading.Timer(60 * 2, self.triviaLoop, args=(channel,)).start()
+            threading.Timer(60 * TIMEOUT_MIN, self.triviaLoop, args=(channel,)).start()
 
     def triviaHandler(self, username, channel, args):
         if len(args) < 2:
